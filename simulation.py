@@ -39,11 +39,12 @@ from decode_param import *
 from transformation_utils import *
 from camera_view_utils import *
 from render_utils import *
+from cv2_compat import COLOR_BGR2RGB, COLOR_RGB2BGR, cvtColor as cv2_cvtColor, imwrite as cv2_imwrite, resize as cv2_resize
 from save_video import save_video
 from threestudio_utils import cleanup
 from update_grad import update_grad_param, lr_scheduler
 
-from video_distillation.cogv_guidance import CogVideoGuidance
+from video_distillation.cogv_guidance import CogVideoGuidance, DummyGuidance
 
 torch.manual_seed(0)
 
@@ -61,6 +62,14 @@ class PipelineParamsNoparse:
         self.convert_SHs_python = False
         self.compute_cov3D_python = False
         self.debug = False
+
+
+def unpack_rasterize_output(result):
+    if not isinstance(result, tuple):
+        raise TypeError(f"Unexpected rasterize output type: {type(result)!r}")
+    if len(result) < 4:
+        raise ValueError(f"Unexpected rasterize output length: {len(result)}")
+    return result[0], result[1], result[2], result[3]
 
 
 def load_checkpoint(model_path, iteration=-1, material=None):
@@ -139,7 +148,7 @@ def render_frame(mpm_solver, gs_num, init_len, moving_pts_path,
         shs = torch.cat([shs, params_inpaint['shs']], dim=0)
 
     colors_precomp = convert_SH(shs, current_camera, gaussians, pos, rot)
-    rendering, _, _, _ = rasterize(
+    rendering, _, _, _ = unpack_rasterize_output(rasterize(
         means3D=pos,
         means2D=pos,
         means2D_abs=pos,
@@ -149,7 +158,7 @@ def render_frame(mpm_solver, gs_num, init_len, moving_pts_path,
         scales=None,
         rotations=None,
         cov3D_precomp=cov3D,
-    )
+    ))
     return rendering
 
 
@@ -166,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("--downsample", type=float, default=1.0)
     parser.add_argument("--n_epoch", type=int, default=10)
     parser.add_argument("--n_key_frame", type=int, default=8)
+    parser.add_argument("--guidance-mode", choices=["raft", "raft_cpu", "dummy"], default="raft")
     args = parser.parse_args()
 
     if not os.path.exists(args.model_path):
@@ -205,7 +215,8 @@ if __name__ == "__main__":
     if args.downsample != 1.:
         for k in optimize_params["line"]:
             optimize_params["line"][k] *= args.downsample
-        optimize_params["bbox_2d"] = [v*args.downsample for v in optimize_params["bbox_2d"]]
+        if optimize_params["bbox_2d"] is not None:
+            optimize_params["bbox_2d"] = [v*args.downsample for v in optimize_params["bbox_2d"]]
 
     # load gaussians
     print("Loading gaussians...")
@@ -409,7 +420,18 @@ if __name__ == "__main__":
     )
 
     # run the simulation
-    guidance = CogVideoGuidance(guidance_path, downsample=args.downsample, num_frames=args.n_key_frame)
+    if args.guidance_mode == "dummy":
+        guidance = DummyGuidance(
+            guidance_path, downsample=args.downsample, num_frames=args.n_key_frame
+        )
+    else:
+        flow_device = "cpu" if args.guidance_mode == "raft_cpu" else None
+        guidance = CogVideoGuidance(
+            guidance_path,
+            downsample=args.downsample,
+            num_frames=args.n_key_frame,
+            flow_device=flow_device,
+        )
 
     current_camera, camera_view_info = get_camera_view(
         model_path,
@@ -535,7 +557,7 @@ if __name__ == "__main__":
                     shs = torch.cat([shs, params_inpaint['shs']], dim=0)
 
                 colors_precomp = convert_SH(shs, current_camera, gaussians, pos, rot)
-                rendering, raddi, _, _ = rasterize(
+                rendering, raddi, _, _ = unpack_rasterize_output(rasterize(
                     means3D=pos,
                     means2D=pos,
                     means2D_abs=pos,
@@ -545,7 +567,7 @@ if __name__ == "__main__":
                     scales=None,
                     rotations=None,
                     cov3D_precomp=cov3D,
-                )
+                ))
                 img_list.append(rendering)
             
             ## Optimize
@@ -765,7 +787,7 @@ if __name__ == "__main__":
                     shs = torch.cat([shs, params_inpaint['shs']], dim=0)
 
                 colors_precomp = convert_SH(shs, current_camera, gaussians, pos, rot)
-                rendering, raddi, _, _ = rasterize(
+                rendering, raddi, _, _ = unpack_rasterize_output(rasterize(
                     means3D=pos,
                     means2D=init_screen_points,
                     means2D_abs=init_screen_points,
@@ -775,18 +797,18 @@ if __name__ == "__main__":
                     scales=None,
                     rotations=None,
                     cov3D_precomp=cov3D,
-                )
+                ))
                 if (frame+1) % stage_num == 0:
                     renderings.append(rendering)
 
                 cv2_img = rendering.permute(1, 2, 0).detach().cpu().numpy()
-                cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+                cv2_img = cv2_cvtColor(cv2_img, COLOR_BGR2RGB)
                 if height is None or width is None:
                     height = cv2_img.shape[0] // 2 * 2
                     width = cv2_img.shape[1] // 2 * 2
                 assert args.output_path is not None
                 os.makedirs(os.path.join(args.output_path, 'frames'), exist_ok=True)
-                cv2.imwrite(
+                cv2_imwrite(
                     os.path.join(args.output_path, f"frames/{frame:04d}.png"),
                     255 * cv2_img,
                 )
@@ -814,7 +836,7 @@ if __name__ == "__main__":
             mpm_solver.reset_pos_from_torch(mpm_init_pos, mpm_init_vol, mpm_init_cov)
 
             cv2_frames = np.concatenate(cv2_frames, axis=0)
-            cv2_frames = cv2.resize(cv2_frames, (line_shape, line_shape))[:,:,::-1]
+            cv2_frames = cv2_resize(cv2_frames, (line_shape, line_shape))[:,:,::-1]
             wandb.log({"frames": wandb.Image(cv2_frames, caption=f'renderings, ep:{batch}')})
 
             # save log of optical flows
@@ -825,5 +847,5 @@ if __name__ == "__main__":
                 os.makedirs(os.path.join(args.output_path, 'debug_flow'))
             for i, flow_img in enumerate(flow_imgs):
                 cv2_img = flow_img.permute(1, 2, 0).detach().cpu().numpy()
-                cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_RGB2BGR)
-                cv2.imwrite(os.path.join(args.output_path, f"debug_flow/{batch:02d}_{i:05d}_render.png"), cv2_img)
+                cv2_img = cv2_cvtColor(cv2_img, COLOR_RGB2BGR)
+                cv2_imwrite(os.path.join(args.output_path, f"debug_flow/{batch:02d}_{i:05d}_render.png"), cv2_img)

@@ -1,0 +1,23 @@
+# Python cache and environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Credentials
+.env
+.env.*
+!.env.example
+
+# Local data and generated output
+/PAC_NeRF_data/
+/model/
+/outputs/
+/logs/
+/wandb/
+/*.pdf
+
+# Build artifacts and downloaded dependencies
+/submodules/simple-knn/build/
+/supplemental_pipeline/external/
+/supplemental_pipeline/workspaces/

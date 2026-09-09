@@ -1,0 +1,92 @@
+{
+    "opacity_threshold": 0.02,
+    "rotation_degree": [
+        0
+    ],
+    "rotation_axis": [
+        0
+    ],
+    "substep_dt": 0.0002,
+    "frame_dt": 0.005,
+    "opt_frame_dt": 0.0002,
+    "frame_num": 50,
+    "nu": 0.2,
+    "E": 0.0001,
+    "yield_stress": 0.001,
+    "material": "plasticine",
+    "density": 500,
+    "g": [
+        0,
+        -9.8,
+        0
+    ],
+    "grid_v_damping_scale": 0.9999,
+    "rpic_damping": 0.0,
+    "boundary_conditions": [
+        {
+            "type": "bounding_box"
+        }
+    ],
+    "mpm_space_vertical_upward_axis": [
+        0,
+        1,
+        0
+    ],
+    "mpm_space_viewpoint_center": [
+        0.95,
+        1.07,
+        1
+    ],
+    "default_camera_index": 21,
+    "show_hint": false,
+    "move_camera": false,
+    "delta_a": -0.4,
+    "delta_e": 0.0,
+    "delta_r": 0.0,
+    "line": {
+        "axis": 0,
+        "pos": 350,
+        "start": 250,
+        "end": 600
+    },
+    "bbox_2d": null,
+    "reduction": "mean",
+    "lr": {
+        "E": [
+            0.005,
+            0.0001,
+            50
+        ],
+        "nu": [
+            0.001,
+            0.001,
+            50
+        ],
+        "yield_stress": [
+            0.005,
+            1e-05,
+            10
+        ]
+    },
+    "experiment": {
+        "name": "cat_time_aligned",
+        "reference_frame_times": [
+            0.0,
+            0.041666666666666664,
+            0.08333333333333333,
+            0.125,
+            0.16666666666666666,
+            0.20833333333333334,
+            0.25,
+            0.2916666666666667,
+            0.3333333333333333,
+            0.375,
+            0.4166666666666667,
+            0.4583333333333333,
+            0.5,
+            0.5416666666666666
+        ],
+        "reference_source": "PAC_NeRF_data/cat/all_data.json: r_10_0 through r_10_13",
+        "change": "Align training keyframe timestamps only; keep initial velocity, gravity, material parameters, learning rates and video frame_dt unchanged."
+    }
+}

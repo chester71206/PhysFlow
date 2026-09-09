@@ -1,0 +1,7 @@
+# Additional Python packages for the supplemental_pipeline layer on top of the base PhysFlow setup.
+#
+# If you already installed the root environment from ../environment.yml, there are currently
+# no extra Python packages required by the top-level scripts in supplemental_pipeline/.
+#
+# Note:
+# external/ repositories may still require their own environments, checkpoints, or build steps.
