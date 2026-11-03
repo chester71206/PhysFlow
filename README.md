@@ -39,6 +39,12 @@ PGSR 版本，另以 `release/rasterizer_source.json` 保存 SHA256；安裝檢�
 首次抽取 flow 時 torchvision 會下載
 RAFT weights；離線機器可搬移原機器 `~/.cache/torch/hub/checkpoints/`。
 
+如果以 Git bundle 搬移程式，clone 指令也可以改成：
+
+```bash
+git clone --branch projected-flow-final /path/to/physflow_projected_flow_final_20261103.bundle PhysFlow
+```
+
 ## 2. 場景資料另外搬移
 
 Git 不含大型場景與 Gaussian checkpoint。請在有原資料的機器匯出：
