@@ -290,18 +290,18 @@ renderCUDA(
 	float* __restrict__ out_color,
 	int* __restrict__ out_observe,
 	float* __restrict__ out_all_map,
+	float* __restrict__ out_plane_depth,
 	const bool render_geo)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
-	uint32_t horizontal_blocks = (W + BLOCK_X - 1) / BLOCK_X;
-	uint2 pix_min = { block.group_index().x * BLOCK_X, block.group_index().y * BLOCK_Y };
-	uint2 pix_max = { min(pix_min.x + BLOCK_X, W), min(pix_min.y + BLOCK_Y , H) };
-	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
-	uint32_t pix_id = W * pix.y + pix.x;
-	float2 pixf = { (float)pix.x, (float)pix.y };
-	const float3 ray_d = {(pixf.x - cx)/focal_x, (pixf.y - cy)/focal_y, 1.f};
-
+	const uint32_t horizontal_blocks = (W + BLOCK_X - 1) / BLOCK_X;
+	const uint2 pix_min = { block.group_index().x * BLOCK_X, block.group_index().y * BLOCK_Y };
+	const uint2 pix_max = { min(pix_min.x + BLOCK_X, W), min(pix_min.y + BLOCK_Y , H) };
+	const uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
+	const uint32_t pix_id = W * pix.y + pix.x;
+	const float2 pixf = { (float)pix.x, (float)pix.y };
+	const float2 ray = { (pixf.x - cx) / focal_x, (pixf.y - cy) / focal_y };
 	// Check if this thread is associated with a valid pixel or outside.
 	bool inside = pix.x < W&& pix.y < H;
 	// Done threads can help with fetching, but don't rasterize
@@ -401,6 +401,7 @@ renderCUDA(
 		if (render_geo) {
 			for (int ch = 0; ch < ALL_MAP; ch++)
 				out_all_map[ch * H * W + pix_id] = All_map[ch];
+			out_plane_depth[pix_id] = All_map[4] / -(All_map[0] * ray.x + All_map[1] * ray.y + All_map[2] + 1.0e-8);
 		}
 	}
 }
@@ -424,6 +425,7 @@ void FORWARD::render(
 	float* out_color,
 	int* out_observe,
 	float* out_all_map,
+	float* out_plane_depth,
 	const bool render_geo)
 {
 	renderCUDA<NUM_CHANNELS,NUM_ALL_MAP> << <grid, block >> > (
@@ -444,6 +446,7 @@ void FORWARD::render(
 		out_color,
 		out_observe,
 		out_all_map,
+		out_plane_depth,
 		render_geo);
 }
 

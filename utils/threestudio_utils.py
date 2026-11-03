@@ -2,12 +2,9 @@
 
 import gc
 import os
+import sys
 from typing import Any
 
-try:
-    import tinycudann as tcnn
-except ImportError:
-    tcnn = None
 import torch
 from packaging import version
 
@@ -19,6 +16,9 @@ def parse_version(ver: str):
 def cleanup():
     gc.collect()
     torch.cuda.empty_cache()
+    # The flow path does not use tiny-cuda-nn. Only clean it if an optional
+    # caller has already loaded it; importing it initializes a CUDA context.
+    tcnn = sys.modules.get('tinycudann')
     if tcnn is not None:
         tcnn.free_temporary_memory()
     

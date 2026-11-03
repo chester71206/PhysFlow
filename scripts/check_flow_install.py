@@ -20,6 +20,12 @@ for name in ['torch', 'torchvision', 'warp', 'taichi', 'pytorch3d', 'point_cloud
     module = importlib.import_module(name)
     print(name, getattr(module, '__version__', ''), getattr(module, '__file__', ''), flush=True)
 import torch
+import diff_plane_rasterization
+installed = Path(diff_plane_rasterization.__file__)
+expected = ROOT/'submodules/diff-plane-rasterization/diff_plane_rasterization/__init__.py'
+assert installed.read_bytes() == expected.read_bytes(), 'Installed rasterizer wrapper differs; rebuild with scripts/install_flow.sh'
+for name, digest in json.loads((ROOT/'release/rasterizer_source.json').read_text())['sha256'].items():
+    assert hashlib.sha256((ROOT/'submodules/diff-plane-rasterization'/name).read_bytes()).hexdigest() == digest, name
 if not a.cpu_only:
     assert torch.cuda.is_available(), 'A compatible NVIDIA GPU/driver is required'
     assert torch.version.cuda == '11.8', torch.version.cuda

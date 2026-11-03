@@ -402,15 +402,18 @@ renderCUDA(
 	const uint2* __restrict__ ranges,
 	const uint32_t* __restrict__ point_list,
 	int W, int H,
+	float fx, float fy,
 	const float* __restrict__ bg_color,
 	const float2* __restrict__ points_xy_image,
 	const float4* __restrict__ conic_opacity,
 	const float* __restrict__ colors,
 	const float* __restrict__ all_maps,
+	const float* __restrict__ all_map_pixels,
 	const float* __restrict__ final_Ts,
 	const uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ dL_dpixels,
 	const float* __restrict__ dL_dout_all_maps,
+	const float* __restrict__ dL_dout_plane_depths,
 	float3* __restrict__ dL_dmean2D,
 	float3* __restrict__ dL_dmean2D_abs,
 	float4* __restrict__ dL_dconic2D,
@@ -427,6 +430,7 @@ renderCUDA(
 	const uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	const uint32_t pix_id = W * pix.y + pix.x;
 	const float2 pixf = { (float)pix.x, (float)pix.y };
+	const float2 ray = { (pixf.x - W * 0.5) / fx, (pixf.y - H * 0.5) / fy };
 
 	const bool inside = pix.x < W&& pix.y < H;
 	const uint2 range = ranges[block.group_index().y * horizontal_blocks + block.group_index().x];
@@ -456,14 +460,30 @@ renderCUDA(
 	float accum_all_map[MAP_N] = { 0 };
 	float dL_dpixel[C];
 	float dL_dout_all_map[MAP_N];
+	// float grad_sum = 0;
 	if (inside) {
-		for (int i = 0; i < C; i++)
+		for (int i = 0; i < C; i++) {
 			dL_dpixel[i] = dL_dpixels[i * H * W + pix_id];
+			// grad_sum += fabs(dL_dpixel[i]);
+		}
 		if(render_geo) {
-			for (int i = 0; i < MAP_N; i++)
+			for (int i = 0; i < MAP_N; i++) {
 				dL_dout_all_map[i] = dL_dout_all_maps[i * H * W + pix_id];
+				// grad_sum += fabs(dL_dout_all_map[i]);
+			}
+			const float3 normal = {all_map_pixels[pix_id], all_map_pixels[H * W + pix_id], all_map_pixels[2 * H * W + pix_id]};
+			const float distance = all_map_pixels[4 * H * W + pix_id];
+			const float tmp = (normal.x * ray.x + normal.y * ray.y + normal.z + 1.0e-8);
+			dL_dout_all_map[MAP_N-1] += (-dL_dout_plane_depths[pix_id] / tmp);
+			dL_dout_all_map[0] += dL_dout_plane_depths[pix_id] * (distance / (tmp * tmp) * ray.x);
+			dL_dout_all_map[1] += dL_dout_plane_depths[pix_id] * (distance / (tmp * tmp) * ray.y);
+			dL_dout_all_map[2] += dL_dout_plane_depths[pix_id] * (distance / (tmp * tmp));
 		}
 	}
+	// If grad is too small, skip
+	// if (grad_sum < 0.000001f) {
+	// 	done = true;
+	// }
 
 	float last_alpha = 0;
 	float last_color[C] = { 0 };
@@ -663,15 +683,18 @@ void BACKWARD::render(
 	const uint2* ranges,
 	const uint32_t* point_list,
 	int W, int H,
+	float fx, float fy,
 	const float* bg_color,
 	const float2* means2D,
 	const float4* conic_opacity,
 	const float* colors,
 	const float* all_maps,
+	const float* all_map_pixels,
 	const float* final_Ts,
 	const uint32_t* n_contrib,
 	const float* dL_dpixels,
 	const float* dL_dout_all_map,
+	const float* dL_dout_plane_depth,
 	float3* dL_dmean2D,
 	float3* dL_dmean2D_abs,
 	float4* dL_dconic2D,
@@ -684,15 +707,18 @@ void BACKWARD::render(
 		ranges,
 		point_list,
 		W, H,
+		fx, fy,
 		bg_color,
 		means2D,
 		conic_opacity,
 		colors,
 		all_maps,
+		all_map_pixels,
 		final_Ts,
 		n_contrib,
 		dL_dpixels,
 		dL_dout_all_map,
+		dL_dout_plane_depth,
 		dL_dmean2D,
 		dL_dmean2D_abs,
 		dL_dconic2D,

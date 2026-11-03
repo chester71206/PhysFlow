@@ -34,7 +34,9 @@ python scripts/smoke_flow_cpu.py
 ```
 
 安裝腳本固定 PyTorch3D commit 與 Python dependencies，從 repo 原始碼重新編譯
-simple-knn/rasterizer，不使用本機 `.so`。首次抽取 flow 時 torchvision 會下載
+simple-knn/rasterizer，不使用本機 `.so`。rasterizer 原始碼對齊原機器實際載入的
+PGSR 版本，另以 `release/rasterizer_source.json` 保存 SHA256；安裝檢查會比對 wrapper。
+首次抽取 flow 時 torchvision 會下載
 RAFT weights；離線機器可搬移原機器 `~/.cache/torch/hub/checkpoints/`。
 
 ## 2. 場景資料另外搬移

@@ -53,12 +53,14 @@ namespace CudaRasterizer
 			int* radii,
 			int* out_observe,
 			float* out_all_map,
+			float* out_plane_depth,
 			const bool render_geo,
 			bool debug = false);
 
 		static void backward(
 			const int P, int D, int M, int R,
 			const float* background,
+			const float* all_map_pixels,
 			const int width, int height,
 			const float* means3D,
 			const float* shs,
@@ -78,6 +80,7 @@ namespace CudaRasterizer
 			char* image_buffer,
 			const float* dL_dpix,
 			const float* dL_dout_all_map,
+			const float* dL_dout_plane_depth,
 			float* dL_dmean2D,
 			float* dL_dmean2D_abs,
 			float* dL_dconic,

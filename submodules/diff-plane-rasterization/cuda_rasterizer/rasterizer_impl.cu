@@ -220,6 +220,7 @@ int CudaRasterizer::Rasterizer::forward(
 	int* radii,
 	int* out_observe,
 	float* out_all_map,
+	float* out_plane_depth,
 	const bool render_geo,
 	bool debug)
 {
@@ -342,6 +343,7 @@ int CudaRasterizer::Rasterizer::forward(
 		out_color,
 		out_observe,
 		out_all_map,
+		out_plane_depth,
 		render_geo), debug)
 
 	return num_rendered;
@@ -352,6 +354,7 @@ int CudaRasterizer::Rasterizer::forward(
 void CudaRasterizer::Rasterizer::backward(
 	const int P, int D, int M, int R,
 	const float* background,
+	const float* all_map_pixels,
 	const int width, int height,
 	const float* means3D,
 	const float* shs,
@@ -371,6 +374,7 @@ void CudaRasterizer::Rasterizer::backward(
 	char* img_buffer,
 	const float* dL_dpix,
 	const float* dL_dout_all_map,
+	const float* dL_dout_plane_depth,
 	float* dL_dmean2D,
 	float* dL_dmean2D_abs,
 	float* dL_dconic,
@@ -410,15 +414,18 @@ void CudaRasterizer::Rasterizer::backward(
 		imgState.ranges,
 		binningState.point_list,
 		width, height,
+		focal_x, focal_y,
 		background,
 		geomState.means2D,
 		geomState.conic_opacity,
 		color_ptr,
 		all_maps,
+		all_map_pixels,
 		imgState.accum_alpha,
 		imgState.n_contrib,
 		dL_dpix,
 		dL_dout_all_map,
+		dL_dout_plane_depth,
 		(float3*)dL_dmean2D,
 		(float3*)dL_dmean2D_abs,
 		(float4*)dL_dconic,
