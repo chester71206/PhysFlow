@@ -4,7 +4,10 @@ import gc
 import os
 from typing import Any
 
-import tinycudann as tcnn
+try:
+    import tinycudann as tcnn
+except ImportError:
+    tcnn = None
 import torch
 from packaging import version
 
@@ -16,7 +19,8 @@ def parse_version(ver: str):
 def cleanup():
     gc.collect()
     torch.cuda.empty_cache()
-    tcnn.free_temporary_memory()
+    if tcnn is not None:
+        tcnn.free_temporary_memory()
     
     
 def get_rank():

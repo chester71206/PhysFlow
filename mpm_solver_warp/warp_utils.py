@@ -23,6 +23,7 @@ class MPMModelStruct:
     viscosity: wp.array(dtype=float)
     nu: wp.array(dtype=float)
     material: int
+    newtonian_rate_model: int
 
     ######## for plasticity ####
     yield_stress: wp.array(dtype=float)

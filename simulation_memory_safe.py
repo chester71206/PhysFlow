@@ -167,9 +167,12 @@ def render_frame(mpm_solver, gs_num, init_len, moving_pts_path,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path", type=str, required=True)
+    default_config = Path(__file__).resolve().parent / "config" / "run_memory_safe.json"
+    parser.add_argument("--config", type=str, default=str(default_config),
+                        help="JSON run settings (defaults to config/run_memory_safe.json)")
+    parser.add_argument("--model_path", type=str, default=None)
     parser.add_argument("--output_path", type=str, default=None)
-    parser.add_argument("--physics_config", type=str, required=True)
+    parser.add_argument("--physics_config", type=str, default=None)
     parser.add_argument("--white_bg", type=bool, default=True)
     parser.add_argument("--output_ply", action="store_true")
     parser.add_argument("--output_h5", action="store_true")
@@ -181,12 +184,33 @@ if __name__ == "__main__":
     parser.add_argument("--guidance-mode", choices=["raft", "raft_cpu", "dummy"], default="raft")
     parser.add_argument("--stop-after-batches", type=int, default=None,
                         help="Stop after N optimization batches for a bounded memory smoke test")
+    parser.add_argument("--skip-video", action="store_true",
+                        help="Skip visualization and debug flow output during training")
+    # Load a small editable preset first. Explicit CLI flags always take priority.
+    config_args, _ = parser.parse_known_args()
+    try:
+        with open(config_args.config) as config_file:
+            run_defaults = json.load(config_file)
+    except FileNotFoundError:
+        parser.error(f"run config does not exist: {config_args.config}")
+    allowed_keys = {action.dest for action in parser._actions} - {"help", "config"}
+    unknown_keys = set(run_defaults) - allowed_keys
+    if unknown_keys:
+        parser.error(f"unknown keys in {config_args.config}: {', '.join(sorted(unknown_keys))}")
+    parser.set_defaults(**run_defaults)
     args = parser.parse_args()
+    if not args.model_path or not args.physics_config or not args.output_path:
+        parser.error("model_path, physics_config, and output_path must be set in --config or on the command line")
     if args.output_path is None:
         raise ValueError("Use a separate --output_path for the memory-lifetime experiment")
     if args.stop_after_batches is not None and (args.eval or args.stop_after_batches < 1):
         raise ValueError("--stop-after-batches requires training and a positive count")
     trial_output = Path(args.output_path + f'_ds{args.downsample}_ep{args.n_epoch}')
+    # Keep repeated one-command runs safe and convenient: never overwrite old results.
+    if not args.eval and trial_output.exists() and any(trial_output.iterdir()):
+        from datetime import datetime
+        args.output_path += datetime.now().strftime("_%Y%m%d_%H%M%S")
+        trial_output = Path(args.output_path + f'_ds{args.downsample}_ep{args.n_epoch}')
     if not args.eval and trial_output.exists() and any(trial_output.iterdir()):
         raise FileExistsError(f"Refusing to overwrite an existing run: {trial_output}")
 
@@ -216,8 +240,7 @@ if __name__ == "__main__":
                        "physics_config": json.load(open(args.physics_config))}, out, indent=2)
 
     # Create experiment logger
-    wandb.init(project="Phys3D")
-    wandb.run.name = args.output_path.split('/')[-1]
+    wandb.init(project="Phys3D", name=args.output_path.split('/')[-1])
 
 
     # load scene config
@@ -232,8 +255,10 @@ if __name__ == "__main__":
     ) = decode_param_json(args.physics_config)
 
     if args.downsample != 1.:
-        for k in optimize_params["line"]:
-            optimize_params["line"][k] *= args.downsample
+        # ``axis`` selects a direction; only the pixel coordinates are scaled.
+        # Convert them back to integers because they are used as array slices.
+        for k in ("pos", "start", "end"):
+            optimize_params["line"][k] = int(optimize_params["line"][k] * args.downsample)
         if optimize_params["bbox_2d"] is not None:
             optimize_params["bbox_2d"] = [v*args.downsample for v in optimize_params["bbox_2d"]]
 
@@ -322,6 +347,9 @@ if __name__ == "__main__":
     if 'playdoh' in model_path:
         scaling = 0.75
     transformed_pos, scale_origin, original_mean_pos = transform2origin(rotated_pos, scaling=scaling)
+    if not args.eval:
+        with open(os.path.join(args.output_path, 'kinematics_manifest.json'), 'w') as out:
+            json.dump({'scale_origin': float(scale_origin)}, out, indent=2)
     transformed_pos = shift2center111(transformed_pos)
 
     # modify covariance matrix accordingly
@@ -747,7 +775,7 @@ if __name__ == "__main__":
 
 
         # render video
-        if batch == 0 or (batch + 1) % render_batch_num == 0 or batch == batch_num:
+        if not args.skip_video and (batch == 0 or (batch + 1) % render_batch_num == 0 or batch == batch_num):
             with torch.no_grad():
                 if mpm_solver.mpm_model.material in [5, 6]:
                     fluid_viscosity = SCALE_E * wp.to_torch(mpm_solver.mpm_model.E) / (2. * (1. + wp.to_torch(mpm_solver.mpm_model.nu)))

@@ -44,6 +44,7 @@ class MPM_Simulator_WARP:
 
         # material is used to switch between different elastoplastic models. 0 is jelly
         self.mpm_model.material = 0
+        self.mpm_model.newtonian_rate_model = 0
         self.mpm_model.yield_stress = wp.zeros(shape=1, dtype=float, device=device, requires_grad=True)
         self.mpm_model.plastic_viscosity = wp.zeros(shape=1, dtype=float, device=device, requires_grad=True)
 
@@ -221,7 +222,7 @@ class MPM_Simulator_WARP:
         assert tensor_x.shape[0] == tensor_volume.shape[0]
         self.initialize(self.n_particles, n_grid, grid_lim, device=device)
 
-        self.import_particle_x_from_torch(tensor_x, device)
+        self.import_particle_x_from_torch(tensor_x, device=device)
         self.mpm_state.particle_vol = wp.from_numpy(
             tensor_volume.detach().clone().cpu().numpy(), dtype=float, device=device, requires_grad=True
         )
@@ -270,12 +271,15 @@ class MPM_Simulator_WARP:
         tensor_x,
         tensor_volume,
         tensor_cov=None,
-        device="cuda:0",
+        device=None,
+        complete=False,
     ):
+        if device is None:
+            device = self.mpm_state.particle_x.device
         self.time = 0.0
         self.dim, self.n_particles = tensor_x.shape[1], tensor_x.shape[0]
 
-        self.import_particle_x_from_torch(tensor_x, device)
+        self.import_particle_x_from_torch(tensor_x, device=device)
         self.mpm_state.particle_vol = wp.from_numpy(
             tensor_volume.detach().clone().cpu().numpy(), dtype=float, device=device, requires_grad=True
         )
@@ -312,11 +316,43 @@ class MPM_Simulator_WARP:
             device=device,
         )
 
+        if complete:
+            # A fresh rollout must not inherit APIC velocity or deformation
+            # from training or preview rendering. Historical callers opt out.
+            for name in ("particle_C", "particle_stress", "particle_Jp"):
+                getattr(self.mpm_state, name).zero_()
+            for name in ("particle_F", "particle_F_N", "particle_R"):
+                wp.launch(set_mat33_to_identity, self.n_particles,
+                          [getattr(self.mpm_state, name)], device=device)
+            wp.copy(self.mpm_state.particle_cov, self.mpm_state.particle_init_cov)
+            for name in ("particle_x", "particle_v", "particle_C", "particle_stress",
+                         "particle_F", "particle_F_trial", "particle_F_N",
+                         "particle_F_N_trial", "particle_R", "particle_cov",
+                         "grid_m", "grid_v_in", "grid_v_out"):
+                array = getattr(self.mpm_state, name)
+                if array.grad is not None:
+                    array.grad.zero_()
+            if hasattr(self, "_initial_velocity"):
+                self.import_particle_v_from_torch(self._initial_velocity, device=device)
+
+    def set_initial_velocity_from_torch(self, tensor_v):
+        """Preserve an explicit initial velocity across complete rollout resets."""
+        if tuple(tensor_v.shape) != (self.n_particles, 3) or not torch.isfinite(tensor_v).all():
+            raise ValueError("Initial velocity must have shape (n_particles, 3) and be finite")
+        self._initial_velocity = tensor_v.detach().clone()
+        self.import_particle_v_from_torch(self._initial_velocity,
+                                          device=self.mpm_state.particle_x.device)
+
     # must give density. mass will be updated as density * volume
     def set_parameters(self, device="cuda:0", **kwargs):
-        self.set_parameters_dict(device, kwargs)
+        self.set_parameters_dict(kwargs, device=device)
 
     def set_parameters_dict(self, kwargs={}, device="cuda:0"):
+        if "newtonian_model" in kwargs:
+            name = kwargs["newtonian_model"]
+            if name not in ("legacy", "strain_rate"):
+                raise ValueError("newtonian_model must be legacy or strain_rate")
+            self.mpm_model.newtonian_rate_model = int(name == "strain_rate")
         if "material" in kwargs:
             if kwargs["material"] == "jelly" or kwargs["material"] == "elastic":
                 self.mpm_model.material = 0
@@ -893,10 +929,13 @@ class MPM_Simulator_WARP:
         self.grid_postprocess.append(collide)
         self.modify_bc.append(modify)
 
-    def add_bounding_box(self, start_time=0.0, end_time=999.0):
+    def add_bounding_box(self, start_time=0.0, end_time=999.0, bottom_padding=3):
+        if not isinstance(bottom_padding, int) or not 0 <= bottom_padding < self.mpm_model.n_grid // 2:
+            raise ValueError("bottom_padding must be a nonnegative grid-cell count below n_grid/2")
         collider_param = Dirichlet_collider()
         collider_param.start_time = start_time
         collider_param.end_time = end_time
+        collider_param.threshold = float(bottom_padding)
 
         self.collider_params.append(collider_param)
 
@@ -927,7 +966,7 @@ class MPM_Simulator_WARP:
                         state.grid_v_out[grid_x, grid_y, grid_z][2],
                     )
 
-                if grid_y < padding and state.grid_v_out[grid_x, grid_y, grid_z][1] < 0:
+                if float(grid_y) < param.threshold and state.grid_v_out[grid_x, grid_y, grid_z][1] < 0:
                     state.grid_v_out[grid_x, grid_y, grid_z] = wp.vec3(
                         state.grid_v_out[grid_x, grid_y, grid_z][0],
                         0.0,

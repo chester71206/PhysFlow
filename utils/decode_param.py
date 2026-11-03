@@ -49,6 +49,8 @@ def decode_param_json(json_file):
     else:
         material_params["viscosity"] = 1e-1
     # add end
+    if "newtonian_model" in sim_params:
+        material_params["newtonian_model"] = sim_params["newtonian_model"]
 
     if "yield_stress" in sim_params.keys():
         material_params["yield_stress"] = sim_params["yield_stress"]
@@ -310,7 +312,8 @@ def set_boundary_conditions(
                 start_time=start_time,
             )
         elif bc["type"] == "bounding_box":
-            mpm_solver.add_bounding_box()
+            mpm_solver.add_bounding_box(start_time=bc.get("start_time", 0.),
+                end_time=bc.get("end_time", 999.), bottom_padding=bc.get("bottom_padding", 3))
 
         elif bc["type"] == "enforce_particle_translation":
             assert "point" in bc.keys()
@@ -401,6 +404,7 @@ def set_boundary_conditions(
         else:
             raise TypeError("Undefined BC type")
 
+@torch.no_grad()
 def find_far_points(xyzs, selected_points, thres=0.05):
     """
     Args:
@@ -410,22 +414,22 @@ def find_far_points(xyzs, selected_points, thres=0.05):
         freeze_mask: [N], 1 for points that are far away, 0 for points that are close
                     dtype=torch.int
     """
-    chunk_size = 10000
-
-    freeze_mask_list = []
-    for i in range(0, xyzs.shape[0], chunk_size):
-
-        end_index = min(i + chunk_size, xyzs.shape[0])
-        xyzs_chunk = xyzs[i:end_index]
-        # [M, N]
-        cdist = torch.cdist(xyzs_chunk, selected_points)
-
-        min_dist, _ = torch.min(cdist, dim=-1)
-        freeze_mask = min_dist > thres
-        freeze_mask = freeze_mask.type(torch.int)
-        freeze_mask_list.append(freeze_mask)
-
-    freeze_mask = torch.cat(freeze_mask_list, dim=0)
+    # Bound BOTH dimensions: each float32 distance matrix is at most 64 MiB.
+    # This is a discrete preprocessing mask; retaining autograd graphs here
+    # would keep all distance blocks alive and defeat the memory bound.
+    query_chunk_size = 2048
+    reference_chunk_size = 8192
+    freeze_mask = torch.empty(xyzs.shape[0], dtype=torch.int, device=xyzs.device)
+    for i in range(0, xyzs.shape[0], query_chunk_size):
+        xyzs_chunk = xyzs[i:i + query_chunk_size]
+        min_dist = torch.full((xyzs_chunk.shape[0],), float('inf'),
+                              dtype=xyzs.dtype, device=xyzs.device)
+        for j in range(0, selected_points.shape[0], reference_chunk_size):
+            distances = torch.cdist(
+                xyzs_chunk, selected_points[j:j + reference_chunk_size])
+            min_dist = torch.minimum(min_dist, distances.min(dim=-1).values)
+            del distances
+        freeze_mask[i:i + query_chunk_size] = (min_dist > thres).int()
 
     # 1 for points that are far away, 0 for points that are close
     return freeze_mask

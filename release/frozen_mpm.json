@@ -1,0 +1,12 @@
+{
+  "mpm_solver_warp/repaired_temporal_rollout.py": "63209ea0187780d7d0b7dc29a605aae68548b1a4b804d5e334032d1ffdef3e41",
+  "mpm_solver_warp/temporal_rollout.py": "ad3c2888c6cf59ba9f34c5d4b1fbc88ce4a1063719983e6aba4f57a906bbb330",
+  "mpm_solver_warp/temporal_kernels.py": "b9aa7eb18b74402de902920703d6e19ed28751dffc96b28c487b933acb86a842",
+  "mpm_solver_warp/analytic_p2g_adjoint.py": "311a6bc96c3b9dc5bdd8985c6be9a74901749b293981a36065618cf6c4d7e2b2",
+  "mpm_solver_warp/analytic_g2p_adjoint.py": "bfff3f76c9097a6ee1c23f0781eaf6ac6619ba291ad2d2852dbea8ccce685e05",
+  "mpm_solver_warp/polar_adjoint.py": "b85a2074f350b4933a14142f13e91f3f55186cbd1a36bcd0b282f6ca5f1fba32",
+  "mpm_solver_warp/mpm_solver_warp.py": "f60e69f08c1a54ee324f336745ad0160993679f140c7e940ab1fb85b78e5258a",
+  "mpm_solver_warp/mpm_utils.py": "1ce116f5ae5f5060b2bf94a30f77a394c235057aeeeb8fe6375af19d7d01f517",
+  "mpm_solver_warp/warp_utils.py": "13def9433244571b934e2eb26f6fde1e18e3b7515772f69f8ed3e3339f9368d7",
+  "mpm_solver_warp/engine_utils.py": "d6c5334933d1740ce198e8b576c311f2a865b16b5b4cd2d3aeb370f6330c405e"
+}

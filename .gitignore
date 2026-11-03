@@ -21,3 +21,20 @@ venv/
 /submodules/simple-knn/build/
 /supplemental_pipeline/external/
 /supplemental_pipeline/workspaces/
+
+# Local experiments, archives and platform-specific compiled files
+*.log
+nohup.out
+*.so
+*.egg-info/
+build/
+.DS_Store
+*.tar.gz
+*.partial
+/WonderPlay/
+/PAC_NERF_original_data/
+/artifacts/
+
+# Also ignore directory symlinks used for local validation
+/model
+/PAC_NeRF_data

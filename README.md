@@ -1,118 +1,154 @@
-# 🌀 PhysFlow
+# PhysFlow: projected-flow material optimization
 
-### <p align="left">[Project Page](https://zhuomanliu.github.io/PhysFlow/) | [ArXiv](https://arxiv.org/abs/2411.14423) | [Data](https://drive.google.com/drive/folders/14hrwGOe1MRSySiIa5HK7_SMeNebNdevc?usp=sharing)</p>
-####  <p align="left"> [Zhuoman Liu](https://zhuomanliu.tech/), [Weicai Ye](https://ywcmaike.github.io/), [Yan Luximon](), [Pengfei Wan](), [Di Zhang]()</p>
+此分支保存最終 optical-flow **reverse AD** 流程，保留
+`simulation_memory_safe.py` 作為原方法比較。中間 simulation 實驗、搜尋式
+optimizer、訓練輸出與模型資料不包含在本次發布中。
 
-Official implementation of 🌀 **PhysFlow**: Unleashing the Potential of Multi-modal Foundation Models and Video Diffusion for 4D Dynamic Physical Scene Simulation (**CVPR 2025**)
+```
+E, nu -> checkpointed MPM -> projected particle motion -> flow loss -> Adam
+                                                         ^
+                               fixed observed RAFT flow --|
+```
 
+梯度穿過完整 MPM rollout 及投影；RAFT 只從觀測影像抽取固定 target。
+這是替代 observation objective，沒有修復原本 renderer + RAFT backward。
+FD 僅檢查 AD，**不做參數搜尋或更新**。production trainer 支援
+**elastic、strain-rate Newtonian**；其餘材料明確回報 unsupported。
+Letter 曾完成 50 epochs 並通過最終梯度檢查，但不代表其他場景都已驗證，
+也不代表材質辨識誤差已足夠低。每次新實驗都重新檢查梯度。
 
-<p align="left">
-  <img width="60%" src="assets/teaser.png"/>
-  <img width="30%" src="assets/teaser.gif"/>
-</p>
+## 1. Clone 與安裝
 
+需要 Linux x86_64、NVIDIA GPU、CUDA **11.8 toolkit**（含 `nvcc`）及 C++ compiler。
+建議 24 GB GPU；實際記憶體隨場景而變。使用 Python 3.9、Torch 2.2.0+cu118、
+torchvision 0.17.0、Warp 0.10.1、Taichi 1.5.0。
 
-## 1. Installation
-```sh
-conda create -n physflow python=3.9 -y
+```bash
+git clone --branch projected-flow-final https://github.com/chester71206/PhysFlow.git
+cd PhysFlow
+conda env create -f environment.yml
 conda activate physflow
-
-pip install torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 --index-url https://download.pytorch.org/whl/cu118
-pip install "git+https://github.com/facebookresearch/pytorch3d.git"
-pip install ninja git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
-conda env update --file environment.yml
-
-cd submodules
-pip install ./simple-knn
-pip install ./diff-plane-rasterization
+export CUDA_HOME=/usr/local/cuda-11.8  # 改成新機器的 CUDA 11.8 toolkit 路徑
+bash scripts/install_flow.sh
+python scripts/smoke_flow_cpu.py
 ```
 
+安裝腳本固定 PyTorch3D commit 與 Python dependencies，從 repo 原始碼重新編譯
+simple-knn/rasterizer，不使用本機 `.so`。首次抽取 flow 時 torchvision 會下載
+RAFT weights；離線機器可搬移原機器 `~/.cache/torch/hub/checkpoints/`。
 
-## 2. Dataset
-We provide three preprocessed datasets: [synthetic dataset from PAC-NeRF](https://drive.google.com/drive/folders/1h79csXUK4clx5Udmsje-9vTwuQ3rBlel?usp=sharing), [real-world dataset from PhysDreamer](https://drive.google.com/drive/folders/1JWXweRK6e1hK7jJzGSJFwSSqNDjLPumo?usp=sharing), and [other real-world scenes](https://drive.google.com/drive/folders/1n9m9AAOxHDiOPPHRrCs0eWRHXdmJPY_u?usp=sharing). Please download them and place in the `./model` directory.
+## 2. 場景資料另外搬移
 
-After downloading, the dataset structure will be as follows:
-```
-model/
-├── pacnerf/
-│   ├── bird/
-│   │   ├── images
-│   │   ├── images_generated
-│   │   ├── point_cloud
-│   │   ├── pcd
-│   │   ├── ...
-│   │   └── cameras.json
-│   │   ...
-├── phys_dreamer/
-│   ├── alocasia/
-│   │   ├── images
-│   │   ├── images_generated
-│   │   ├── point_cloud
-│   │   ├── ...
-│   │   └── moving_part_points.ply
-│   │   ...
-└── realworld/
-│   ├── fox/
-│   │   ├── images
-│   │   ├── images_generated
-│   │   ├── point_cloud
-│   │   ├── ...
-│   │   └── moving_part_points.ply
-│   │   ...
+Git 不含大型場景與 Gaussian checkpoint。請在有原資料的機器匯出：
+
+```bash
+python scripts/export_flow_assets.py --source /path/to/existing/PhysFlow \
+  --output /path/to/pacnerf_flow_assets.tar.gz
+# 只測 Letter 可加 --scenes letter
 ```
 
-## 3. Running
-```sh
-# for synthetic dataset from PAC-NeRF
-sh sim_synthetic.sh
+複製 archive、`.sha256`、`.manifest.json` 至新機器，在 archive 目錄檢查後還原：
 
-# for real-world dataset from PhysDreamer
-sh sim_physdreamer.sh
-
-# for other real-world scenes
-sh sim_realworld.sh
+```bash
+sha256sum -c pacnerf_flow_assets.tar.gz.sha256
+cd /path/to/new/PhysFlow
+tar -xzf /path/to/pacnerf_flow_assets.tar.gz
+python scripts/check_flow_data.py --scene letter
 ```
 
-
-## 4. Custom Dataset
-#### (1) Construct 3D Gaussian splats
-To construct 3DGS, We recommend running [PGSR](https://github.com/zju3dv/PGSR) for multi-view images, [Grid4D](https://github.com/JiaweiXu8/Grid4D) for dynamic video, and [splatt3r](https://github.com/btsmart/splatt3r) for single image.
-
-To isolate moving parts, we recommend [SAM2Point](https://github.com/ZiyuGuo99/SAM2Point) for automated segmentation or [supersplat](https://superspl.at/editor) for mannual segmentation.
-
-#### (2) Generate video
-Please refer to [video_generator.py](./video_generator.py) and modify the prompt text and input image according to your requirements.
-
-#### (3) LLM-based material initialization
-Please query LLMs (*e.g.*, GPT-4o) by providing the region of interest as visual input with the following query prompt:
-> Q: What is this? What is the closest material type? Infer the density and corresponding material parameter values based on the material type.
->
-> \* Note that the parameters used for different material types are as follows: $E, \nu$ for elasticity; $E, \nu, \tau_Y$ for plasticine and metal; $E, \nu, \eta$ for foam; $\theta_{fric}$ for sand; $\mu, \kappa$ for Newtonian fluid; $\mu, \kappa, \tau_Y, \eta$ for non-Newtonian fluid. The output should be in the following format: {"material_type": ... , "density": ...} .
-
-
-For material types, we now support:
-- ☑️ Elastic
-- ☑️ Plasticine
-- ☑️ Metal
-- ☑️ Foam
-- ☑️ Sand
-- ☑️ Newtonian fluid
-- ☑️ Non-Newtonian fluid
-
----
-### Acknowledgements
-
-This framework builds upon​​  [DreamPhysics](https://github.com/tyhuang0428/DreamPhysics) and [PhysGaussian](https://github.com/XPandora/PhysGaussian).​​ ​​For geometry acquisition​​, [PGSR](https://github.com/zju3dv/PGSR), [splatt3r](https://github.com/btsmart/splatt3r), and [Grid4D](https://github.com/JiaweiXu8/Grid4D) ​​served as fundamental geometric reconstruction components.​​ We sincerely appreciate the excellent works of these authors.
-
----
-
-### Citation
-If you find our work useful in your research, please cite:
 ```
-@article{liu2025physflow,
-  title={Unleashing the Potential of Multi-modal Foundation Models and Video Diffusion for 4D Dynamic Physical Scene Simulation},
-  author={Liu, Zhuoman and Ye, Weicai and Luximon, Yan and Wan, Pengfei and Zhang, Di},
-  journal={CVPR},
-  year={2025}
-}
+model/pacnerf/letter/
+  cameras.json
+  images_generated/r_42_0.png ...
+  masks/a_42_0.png ...                 # supplied RGBA observations
+  point_cloud/iteration_*/point_cloud.ply
+  pcd/0.ply ...                       # 原方法 geometry loss 需要
+data/pacnerf/timing/letter.json       # Git 內的真實時間戳
+data/pacnerf/groundtruth.json         # Git 內的材質 GT，僅用於報表
 ```
+
+亦可取得 [PhysFlow 預處理 PAC-NeRF 場景](https://drive.google.com/drive/folders/1h79csXUK4clx5Udmsje-9vTwuQ3rBlel?usp=sharing)，
+但本實驗還需要相對應的 supplied RGBA `masks/`；直接匯出原機器資料能保持觀測一致。
+無須搬移整個 `PAC_NeRF_data/`、`PAC_NERF_original_data/` 或 `outputs/`，
+必要時間戳與材質 GT 已整理進此分支。
+
+## 3. 最終訓練入口
+
+先對完整場景檢查梯度，不更新參數：
+
+```bash
+GPU=0 bash scripts/train_flow.sh \
+  --model-path model/pacnerf/letter \
+  --physics-config config/gradient_repair/letter_flow_ad.json \
+  --output outputs/letter_check --check-only
+```
+
+開始訓練，每次使用新的 output prefix：
+
+```bash
+GPU=0 bash scripts/train_flow.sh \
+  --model-path model/pacnerf/letter \
+  --physics-config config/gradient_repair/letter_flow_ad.json \
+  --output outputs/letter_flow --epochs 50 --lr 0.003
+```
+
+輸出在 `outputs/letter_flow_ds1.0_ep50/`：
+
+- `gradient_check.json`：E、nu 各三種 h 的 central FD vs AD。
+- `training.jsonl`：每次完整 rollout 的 loss、AD gradient 與更新前後參數。
+- `ckpt/sim.json`、`ckpt/optimizer.pt`：材質參數、Adam state、固定 visibility。
+- `post_gradient_check.json`：最終 checkpoint 再檢查梯度。
+- `timing_manifest.json`、`kinematics_manifest.json`：來源時間與場景轉換。
+
+門檻：六組 stencil 全部同號、max relative error ≤10%、median ≤5%。
+初始未通過不訓練，最終未通過保留 checkpoint 並回報失敗。
+`--resume path/to/optimizer.pt --epochs N` 表示**再更新 N 次**。
+模型/config 路徑與資料簽章需一致，既有 checkpoint 不能直接在不同絕對路徑 resume；
+新機器可由相同資料/config 重新開始。
+
+## 4. 全 PAC-NeRF 原方法／新方法比較
+
+```bash
+GPU=0 nohup bash scripts/run_pacnerf.sh outputs/pacnerf_comparison \
+  > pacnerf_comparison.log 2>&1 < /dev/null &
+```
+
+九個場景每場 original → projected-flow AD，各 50 epochs。新方法只跑
+Letter、Droplet、Torus、Bird，其他五個場景標示 unsupported，原方法仍執行。
+訓練與獨立評估在同張 GPU 串行執行。
+
+`results.md`、`results.csv`、`status.json` 約每 15 秒更新 epoch 及可用材質 RE，
+每項完成後補上獨立評估的 foreground/whole **EPE**、half MSE、**PSNR**。
+兩方法的訓練 loss 與 optimizer 不同；場景初始化、GT 與評估流程相同。
+材質 RE 是 `abs(estimated-GT)/abs(GT)`；Markdown 是百分比、CSV 是比例。
+Cream/Toothpaste viscosity 轉換未確立，完整 mean RE 留空。
+
+單獨評估 checkpoint：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 WANDB_MODE=disabled python scripts/evaluate_universal_reference.py \
+  --model-path model/pacnerf/letter \
+  --physics-config config/gradient_repair/letter_flow_ad.json \
+  --checkpoint-json outputs/letter_flow_ds1.0_ep50/ckpt/sim.json \
+  --output outputs/letter_flow_evaluation --dataset pacnerf
+```
+
+## 程式範圍
+
+| 檔案 | 用途 |
+| --- | --- |
+| `scripts/train_projected_flow_gradient.py` | 最終 production AD 訓練 |
+| `flow_scene.py` | 場景初始化；無搜尋或舊訓練 loop |
+| `utils/projected_flow_objective.py` | 固定 observation/visibility 的 projected-flow loss |
+| `mpm_solver_warp/repaired_temporal_rollout.py` | immutable state、checkpoint recomputation、segmented reverse |
+| `mpm_solver_warp/analytic_*_adjoint.py`, `polar_adjoint.py` | 已驗證 VJP |
+| `release/frozen_mpm.json` | 十個凍結 physics 檔案的 SHA256 |
+| `simulation_memory_safe.py` | 原方法基準，仍有原 temporal gradient 限制 |
+
+`deterministic_p2g_diagnostic.py`、`deterministic_g2p_adjoint.py` 雖沿用早期名稱，
+仍是 production adjoint 的必要依賴。其他中間 simulation 沒有加入。
+原作者 `simulation.py` 與資料準備工具仍保留，不是此分支建議訓練入口。
+
+本分支基於 [PhysFlow (CVPR 2025)](https://github.com/zhuomanliu/PhysFlow)，
+[原始 README](docs/UPSTREAM_README.md)、[論文](https://arxiv.org/abs/2411.14423)。
+保留原 repo 及 CUDA extensions 的 LICENSE。

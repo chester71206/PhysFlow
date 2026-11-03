@@ -1,0 +1,2 @@
+# Preserve the exact frozen kernel source bytes used by gradient validation.
+mpm_solver_warp/temporal_kernels.py -whitespace

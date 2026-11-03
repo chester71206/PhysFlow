@@ -95,6 +95,17 @@ def kirchoff_stress_herschel(
 
 
 @wp.func
+def kirchoff_stress_newtonian_rate(J: float, C: wp.mat33, mu: float, lam: float):
+    # PAC-NeRF's viscous-fluid pressure and symmetric velocity-gradient term.
+    # J comes from our full F determinant, rather than PAC-NeRF's scalar update.
+    volume = wp.max(J, 0.05)
+    kappa = lam + 2.0 * mu / 3.0
+    identity = wp.mat33(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+    rate = 0.5 * (C + wp.transpose(C))
+    return kappa * (volume - 1.0 / wp.pow(volume, 6.0)) * identity + mu * rate * volume
+
+
+@wp.func
 def von_mises_return_mapping(F_trial: wp.mat33, model: MPMModelStruct, p: int):
     U = wp.mat33(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     V = wp.mat33(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -163,6 +174,11 @@ def von_mises_return_mapping_with_damage(
     )
     
     if model.yield_stress[0] <= 0:
+        return F_trial
+    # Elastic trial states inside the yield surface must be preserved. Without
+    # this guard delta_gamma is negative, so the projection amplifies small
+    # strains (including SVD roundoff at identity) toward the yield surface.
+    if wp.length(cond) <= SCALE_YS * model.yield_stress[0]:
         return F_trial
     epsilon_hat = epsilon - wp.vec3(temp, temp, temp)
     epsilon_hat_norm = wp.length(epsilon_hat) + 1e-6
@@ -568,9 +584,13 @@ def compute_stress_from_F_trial(
                 state.particle_F[p], U, V, sig, model.mu[p], model.lam[p]
             )
         if model.material == 5: # newtonian
-            stress = kirchoff_stress_herschel(
-                state.particle_F[p], J, model.mu[p], model.lam[p]
-            )
+            if model.newtonian_rate_model == 1:
+                stress = kirchoff_stress_newtonian_rate(
+                    J, state.particle_C[p], model.mu[p], model.lam[p])
+            else:
+                stress = kirchoff_stress_herschel(
+                    state.particle_F[p], J, model.mu[p], model.lam[p]
+                )
 
         stress = (stress + wp.transpose(stress)) / 2.0  # enfore symmetry
         state.particle_stress[p] = stress

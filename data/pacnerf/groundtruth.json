@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "source": {
+    "image": "../ground truth.jpg",
+    "paper": "PAC-NeRF: Physics Augmented Continuum Neural Radiance Fields for Geometry-Agnostic System Identification",
+    "table": 1,
+    "column": "Ground Truth",
+    "paper_url": "https://xuan-li.github.io/pdf/publications/li2023pacnerf.pdf"
+  },
+  "notes": [
+    "Transcribed from the Ground Truth column only; Initial Guess and Optimized are excluded.",
+    "These are the nine named scenes in Table 1, not the numbered instances in GT_table2.",
+    "Values are the physical parameters reported in the table, not PhysFlow internal scaled E/nu.",
+    "mu denotes fluid viscosity for Newtonian fluids and shear modulus for non-Newtonian fluids.",
+    "Friction angle is recorded in degrees."
+  ],
+  "parameter_definitions": {
+    "E": "Young modulus",
+    "nu": "Poisson ratio",
+    "mu": "Fluid viscosity (Newtonian) or shear modulus (non-Newtonian)",
+    "kappa": "Bulk modulus",
+    "yield_stress": "Yield stress, tau_Y",
+    "plastic_viscosity": "Plastic viscosity, eta",
+    "friction_angle_degrees": "Friction angle, theta_fric^0, in degrees"
+  },
+  "scenes": {
+    "droplet": {
+      "material": "newtonian",
+      "parameters": {
+        "mu": 200,
+        "kappa": 100000
+      }
+    },
+    "letter": {
+      "material": "newtonian",
+      "parameters": {
+        "mu": 100,
+        "kappa": 100000
+      }
+    },
+    "cream": {
+      "material": "non_newtonian",
+      "parameters": {
+        "mu": 10000,
+        "kappa": 1000000,
+        "yield_stress": 3000,
+        "plastic_viscosity": 10
+      }
+    },
+    "toothpaste": {
+      "material": "non_newtonian",
+      "parameters": {
+        "mu": 5000,
+        "kappa": 100000,
+        "yield_stress": 200,
+        "plastic_viscosity": 10
+      }
+    },
+    "torus": {
+      "material": "elastic",
+      "parameters": {
+        "E": 1000000,
+        "nu": 0.3
+      }
+    },
+    "bird": {
+      "material": "elastic",
+      "parameters": {
+        "E": 300000,
+        "nu": 0.3
+      }
+    },
+    "playdoh": {
+      "material": "plasticine",
+      "parameters": {
+        "E": 2000000,
+        "nu": 0.3,
+        "yield_stress": 15400
+      }
+    },
+    "cat": {
+      "material": "plasticine",
+      "parameters": {
+        "E": 1000000,
+        "nu": 0.3,
+        "yield_stress": 3850
+      }
+    },
+    "trophy": {
+      "material": "sand",
+      "parameters": {
+        "friction_angle_degrees": 40
+      }
+    }
+  }
+}

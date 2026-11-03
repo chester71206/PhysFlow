@@ -8,6 +8,7 @@ import PIL
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 import torchvision.transforms as T
 from torchvision.models.optical_flow import raft_large
 from torchvision.utils import flow_to_image
@@ -36,7 +37,10 @@ def preprocess(batch, height=FLOW_HEIGHT, width=FLOW_WIDTH, dtype=torch.float32)
     return batch
 
 
-def load_guidance_frames(guidance_path, downsample=1.0, num_frames=8):
+def load_guidance_frames(guidance_path, downsample=1.0, num_frames=8, frame_names=None,
+                         background_mode='source'):
+    if background_mode not in ('source', 'white_masked'):
+        raise ValueError('guidance background must be source or white_masked')
     fnames = sorted((
         fn for fn in os.listdir(guidance_path)
         if os.path.splitext(fn)[1].lower() in {".png", ".jpg", ".jpeg"}
@@ -46,11 +50,34 @@ def load_guidance_frames(guidance_path, downsample=1.0, num_frames=8):
         raise FileNotFoundError(f"No guidance images found under {guidance_path}")
     frame_per_stage = max(1, len(fnames) // num_frames)
 
+    # Official aligned entry point supplies its exact preflight selection.
+    # No argument preserves historical sampling for archived experiments.
+    if frame_names is not None:
+        if len(frame_names) != num_frames + 1 or len(set(frame_names)) != len(frame_names):
+            raise ValueError("Aligned guidance needs n_key_frame+1 distinct images")
+        if any(name not in fnames for name in frame_names):
+            raise ValueError("Selected guidance image is missing")
+        fnames = list(frame_names)
+        frame_per_stage = 1
+
     frames = []
     for i, fn in enumerate(fnames):
         if i % frame_per_stage != 0:
             continue
-        frame = imread(os.path.join(guidance_path, fn))
+        if background_mode == 'white_masked':
+            if not re.fullmatch(r'r_\d+_\d+\.(png|jpg|jpeg)', fn, re.IGNORECASE):
+                raise ValueError('white_masked guidance requires PAC-NeRF frame identities')
+            mask_name = 'a_' + os.path.splitext(fn)[0][2:] + '.png'
+            mask_path = os.path.join(os.path.dirname(guidance_path), 'masks', mask_name)
+            with PIL.Image.open(mask_path) as supplied:
+                if supplied.mode != 'RGBA':
+                    raise ValueError(f'Expected supplied RGBA image: {mask_path}')
+                rgba = np.asarray(supplied, dtype=np.float32)
+            alpha = rgba[..., 3:4] / 255.
+            rgb = np.rint(rgba[..., :3] * alpha + 255. * (1. - alpha)).astype(np.uint8)
+            frame = rgb[..., ::-1].copy()
+        else:
+            frame = imread(os.path.join(guidance_path, fn))
         if downsample != 1.:
             frame = resize(frame, (int(frame.shape[1] * downsample), int(frame.shape[0] * downsample)))
         frame = cvtColor(frame, COLOR_BGR2RGB)
@@ -60,7 +87,8 @@ def load_guidance_frames(guidance_path, downsample=1.0, num_frames=8):
 
 
 class CogVideoGuidance:
-    def __init__(self, guidance_path, downsample=1., num_frames=8, flow_device=None):
+    def __init__(self, guidance_path, downsample=1., num_frames=8, flow_device=None, frame_names=None,
+                 background_mode='source'):
         self.device = get_device()
         self.flow_device = flow_device or self.device
         self.weights_dtype = torch.float32
@@ -68,21 +96,32 @@ class CogVideoGuidance:
         self.FLOW_WIDTH = 480
         
         self.guidance = load_guidance_frames(
-            guidance_path, downsample=downsample, num_frames=num_frames
+            guidance_path, downsample=downsample, num_frames=num_frames, frame_names=frame_names,
+            background_mode=background_mode
         ).to(self.flow_device)
         print("guidance shape:",self.guidance.shape)
         print("guidance flow device:", self.flow_device)
 
         # predict optical flow
-        prev_batch = preprocess(self.guidance[:-1])
-        curr_batch = preprocess(self.guidance[1:])
         self.model = raft_large(pretrained=True, progress=False).to(self.flow_device)
         self.model = self.model.eval()
         # RAFT is fixed guidance; keep gradients to rendered inputs only.
         self.model.requires_grad_(False)
+        # This process also initializes Warp/Taichi CUDA contexts. cuDNN's
+        # convolution path has segfaulted inside RAFT on the shared RTX 3090s;
+        # the native PyTorch convolution path is stable in reference evaluation.
+        torch.backends.cudnn.enabled = False
 
         with torch.no_grad():
-            self.guidance_flows = self.model(prev_batch, curr_batch)[-1]
+            # A full sequence in one RAFT call can exhaust a shared GPU (or
+            # crash in native CUDA code before PyTorch reports an OOM).
+            # Each pair is independent, so batching here does not change the
+            # optical-flow objective.
+            self.guidance_flows = torch.cat([
+                self.model(preprocess(self.guidance[i:i + 1]),
+                           preprocess(self.guidance[i + 1:i + 2]))[-1]
+                for i in range(len(self.guidance) - 1)
+            ], dim=0)
         
         # load masks -- PAC-NeRF
         # self.guidance_masks = None
@@ -106,14 +145,33 @@ class CogVideoGuidance:
 
     def predict_flow(self, rgb_BCHW, rgb_BCHW_init):
         # predict optical flow
+        flow_dtype = next(self.model.parameters()).dtype
         prev_batch = preprocess(
-            torch.concat([rgb_BCHW_init, rgb_BCHW[:-1]], dim=0).to(self.flow_device)
-        ).detach()
-        curr_batch = preprocess(rgb_BCHW.to(self.flow_device))
+            torch.concat([rgb_BCHW_init, rgb_BCHW[:-1]], dim=0).to(self.flow_device), dtype=flow_dtype
+        )
+        curr_batch = preprocess(rgb_BCHW.to(self.flow_device), dtype=flow_dtype)
 
-        rgb_flows = self.model(prev_batch, curr_batch)[-1]
+        # Both rendered frames depend on material parameters. Detaching the
+        # previous frame differentiates a different objective from full-video FD.
+        # Recompute one pair at a time in backward to bound RAFT activation RAM.
+        def pair_flow(previous, current):
+            # torchvision's training-time coordinate detach is also a surrogate
+            # gradient. Keep the recurrent sampling-coordinate derivative when
+            # differentiating a fixed RAFT as an image-space loss.
+            from utils.raft_coordinate_adjoint_20261011 import coordinate_adjoint_forward
+            flow = coordinate_adjoint_forward(self.model, previous, current)[-1]
+            self.model.corr_block.corr_pyramid.clear()
+            return flow
+        flows = []
+        for i in range(len(curr_batch)):
+            previous, current = prev_batch[i:i+1], curr_batch[i:i+1]
+            if torch.is_grad_enabled() and (previous.requires_grad or current.requires_grad):
+                flows.append(checkpoint(pair_flow, previous, current, use_reentrant=False))
+            else:
+                flows.append(pair_flow(previous, current))
+        rgb_flows = torch.cat(flows)
         ## debug
-        flow_imgs = flow_to_image(rgb_flows)
+        flow_imgs = flow_to_image(rgb_flows.detach().float())
 
         return rgb_flows, flow_imgs
 
@@ -136,9 +194,19 @@ class CogVideoGuidance:
         if bbox_2d is None:
             bbox_2d = [0, rgb_BCHW.shape[2], 0, rgb_BCHW.shape[3]]
         
-        bbox_2d = np.asarray(bbox_2d)
+        # Downsampling produces float coordinates. Scale in floating point,
+        # then truncate to pixel indices (matching the original integer case).
+        # Copy so an ndarray supplied by the caller is not modified in place.
+        bbox_2d = np.array(bbox_2d, dtype=np.float64, copy=True)
+        if bbox_2d.shape != (4,) or not np.isfinite(bbox_2d).all():
+            raise ValueError("bbox_2d must contain four finite coordinates: y0, y1, x0, x1")
         bbox_2d[:2] = bbox_2d[:2] / rgb_BCHW.shape[2] * self.FLOW_HEIGHT
         bbox_2d[2:] = bbox_2d[2:] / rgb_BCHW.shape[3] * self.FLOW_WIDTH
+        bbox_2d[:2] = np.clip(bbox_2d[:2], 0, self.FLOW_HEIGHT)
+        bbox_2d[2:] = np.clip(bbox_2d[2:], 0, self.FLOW_WIDTH)
+        bbox_2d = bbox_2d.astype(np.int64)
+        if bbox_2d[0] >= bbox_2d[1] or bbox_2d[2] >= bbox_2d[3]:
+            raise ValueError(f"bbox_2d is empty after mapping to flow pixels: {bbox_2d.tolist()}")
 
         loss_flow = 0.5 * F.mse_loss(rgb_flows[..., bbox_2d[0]:bbox_2d[1], bbox_2d[2]:bbox_2d[3]],
                                         self.guidance_flows[..., bbox_2d[0]:bbox_2d[1], bbox_2d[2]:bbox_2d[3]], 
@@ -149,12 +217,15 @@ class CogVideoGuidance:
 
 
 class DummyGuidance:
-    def __init__(self, guidance_path, downsample=1., num_frames=8):
+    def __init__(self, guidance_path, downsample=1., num_frames=8, frame_names=None,
+                 background_mode='source'):
         self.device = get_device()
         self.guidance = load_guidance_frames(
             guidance_path,
             downsample=downsample,
             num_frames=num_frames,
+            frame_names=frame_names,
+            background_mode=background_mode,
         ).to(self.device)
         print("guidance shape:", self.guidance.shape)
         print("Using dummy guidance: skipping RAFT optical flow and returning zero flow loss.")
