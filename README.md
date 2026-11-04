@@ -168,6 +168,27 @@ GPU=0 bash scripts/run_letter_material_to_gt.sh
 `--reuse-only`。本分支包含兩個起點的材質 JSON、共同評估的 kinematics
 manifest、材質 GT、Letter 場景與 Gaussian checkpoint。
 
+若要檢查「往 GT 走是否單調變好」和「反方向是否讓影像更好」，使用較密的
+材質 landscape 掃描。預設兩條各 25 點的 GT 路徑、original/projected/GT
+三個中心的四種正反方向，以及 GT 周圍 5×5 網格；重複參數只評估一次，
+合計 153 次獨立 forward 評估。會讀取上一段七點 sweep 的相同結果，
+每次最多新增 10 次 GPU 評估，可用同一指令續跑：
+
+```bash
+GPU=8 MAX_NEW=10 bash scripts/run_letter_material_landscape.sh --plan-only
+GPU=8 MAX_NEW=10 bash scripts/run_letter_material_landscape.sh
+# 想自訂其他起點（物理單位 μ、κ）：
+GPU=8 MAX_NEW=10 OUTPUT=outputs/letter_landscape_extra \
+  bash scripts/run_letter_material_landscape.sh --start low_mu=50,100000
+```
+
+輸出 `results.md`/`results.csv`、`path_curves.png`、`direction_curves.png`、
+`gt_neighborhood.png`、`analysis.md` 與 `counterexamples.json`。
+`analysis.md` 計算已量測相鄰點的 EPE/PSNR 單調性；
+`counterexamples.json` 列出材質 RE 增大但 PSNR 增加超過 0.05 dB
+或前景 EPE 降低超過 0.01 px 的點。這些都是有限採樣的觀察，
+不能證明未採樣區間連續平滑或 optimizer 梯度正確。
+
 ## 程式範圍
 
 | 檔案 | 用途 |
