@@ -2,7 +2,7 @@
 
 此分支保存最終 optical-flow **reverse AD** 流程，保留
 `simulation_memory_safe.py` 作為原方法比較。中間 simulation 實驗、搜尋式
-optimizer、訓練輸出與模型資料不包含在本次發布中。
+optimizer 與訓練輸出不包含在本次發布中；Letter 場景模型資料已納入。
 
 ```
 E, nu -> checkpointed MPM -> projected particle motion -> flow loss -> Adam
@@ -45,14 +45,21 @@ RAFT weights；離線機器可搬移原機器 `~/.cache/torch/hub/checkpoints/`�
 git clone --branch projected-flow-final /path/to/physflow_projected_flow_final_20261103.bundle PhysFlow
 ```
 
-## 2. 場景資料另外搬移
+## 2. 場景資料
 
-Git 不含大型場景與 Gaussian checkpoint。請在有原資料的機器匯出：
+`projected-flow-final` 已包含 `model/pacnerf/letter/` 的相機、影像、RGBA
+masks、Gaussian checkpoint 和幾何資料。跑 Letter 材質 sweep 前先檢查：
+
+```bash
+python scripts/check_flow_data.py --scene letter
+```
+
+其他 PAC-NeRF 場景仍需另行搬移。請在有原資料的機器匯出：
 
 ```bash
 python scripts/export_flow_assets.py --source /path/to/existing/PhysFlow \
   --output /path/to/pacnerf_flow_assets.tar.gz
-# 只測 Letter 可加 --scenes letter
+# 例如只搬 Droplet 可加 --scenes droplet
 ```
 
 複製 archive、`.sha256`、`.manifest.json` 至新機器，在 archive 目錄檢查後還原：
@@ -76,9 +83,9 @@ data/pacnerf/groundtruth.json         # Git 內的材質 GT，僅用於報表
 ```
 
 亦可取得 [PhysFlow 預處理 PAC-NeRF 場景](https://drive.google.com/drive/folders/1h79csXUK4clx5Udmsje-9vTwuQ3rBlel?usp=sharing)，
-但本實驗還需要相對應的 supplied RGBA `masks/`；直接匯出原機器資料能保持觀測一致。
-無須搬移整個 `PAC_NeRF_data/`、`PAC_NERF_original_data/` 或 `outputs/`，
-必要時間戳與材質 GT 已整理進此分支。
+但非 Letter 實驗還需要相對應的 supplied RGBA `masks/`；直接匯出原機器資料能保持觀測一致。
+Letter sweep 無須搬移整個 `PAC_NeRF_data/`、`PAC_NERF_original_data/` 或 `outputs/`，
+必要時間戳、材質 GT 和起點參數已整理進此分支。
 
 ## 3. 最終訓練入口
 
@@ -159,7 +166,7 @@ GPU=0 bash scripts/run_letter_material_to_gt.sh
 完成的點也有 `frame_metrics.csv`。結束後生成 `metric_curves.png` 和 PDF。
 首次執行可能下載 RAFT weights。要只讀取已完成結果而不使用 GPU，可加
 `--reuse-only`。本分支包含兩個起點的材質 JSON、共同評估的 kinematics
-manifest 和材質 GT；場景與 Gaussian checkpoint 仍需按第 2 節搬移。
+manifest、材質 GT、Letter 場景與 Gaussian checkpoint。
 
 ## 程式範圍
 
