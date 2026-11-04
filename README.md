@@ -148,6 +148,35 @@ CUDA_VISIBLE_DEVICES=0 WANDB_MODE=disabled python scripts/evaluate_universal_ref
   --output outputs/letter_flow_evaluation --dataset pacnerf
 ```
 
+### 只跑 Letter：原方法與 projected-flow loss，然後畫圖
+
+這個入口在同一張 GPU **串行**執行：原方法 `simulation_memory_safe.py`
+50 個更新、projected physical flow vs fixed observed RAFT flow 50 個更新；
+各自訓練後用相同的 native-renderer/RAFT 評估最終 checkpoint，最後輸出
+loss、材質 RE、逐影格 PSNR/EPE 三張 PNG 與 CSV/報告。
+
+```bash
+GPU=8 bash scripts/run_letter_two_methods.sh outputs/letter_two_methods/letter
+```
+
+輸出在 `outputs/letter_two_methods/letter/detailed_comparison/`：
+`loss_curves.png`、`material_accuracy.png`、`evaluation_accuracy.png`、
+`training_curves.csv`、`frame_metrics.csv`、`REPORT.md`。
+訓練與獨立評估 log 在每個方法的 `train.log`、`evaluation.log`。
+入口拒絕已存在的輸出路徑，避免覆蓋既有實驗。
+
+如兩個方法已訓練及評估完成，可只重畫圖，不佔 GPU：
+
+```bash
+python scripts/report_letter_two_methods.py --base outputs/letter_two_methods/letter
+```
+
+兩種訓練 loss 定義不同，原方法還每十個更新移動一次監督視窗；
+只能各自看收斂趨勢。PSNR/EPE 目前是**最終 checkpoint** 的逐影格／flow-pair
+評估，並非每個更新都有影像指標。若原方法和 projected 訓練時的
+`scale_origin` 不同，材質 RE 曲線依各自訓練 scale 計算，報告也列共同評估
+scale 下的結果。
+
 ## Letter 目前參數的 E/nu 局部曲線（建議先跑）
 
 以 `data/pacnerf/letter_material_starts/projected_flow_ad.json` 為唯一中心。
