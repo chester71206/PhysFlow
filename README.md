@@ -153,14 +153,20 @@ CUDA_VISIBLE_DEVICES=0 WANDB_MODE=disabled python scripts/evaluate_universal_ref
 這個入口在同一張 GPU **串行**執行：原方法 `simulation_memory_safe.py`
 50 個更新、projected physical flow vs fixed observed RAFT flow 50 個更新；
 各自訓練後用相同的 native-renderer/RAFT 評估最終 checkpoint，最後輸出
-loss、材質 RE、逐影格 PSNR/EPE 三張 PNG 與 CSV/報告。
+loss、內部 E/nu、材質 RE、逐影格 PSNR/EPE PNG 與 CSV/報告。
+兩種方法讀相同的初始 E/nu、`mpm_scaling`、重力與初速度；原方法仍使用
+其原本的訓練 loss，只修正先前忽略 `mpm_scaling`、世界座標重力與初速度的
+場景初始化。報告會驗證兩份 kinematics manifest 一致。
+因此這是新的一組受控比較，不能把結果混入較早、原方法用硬編碼
+Letter scaling=2.0 且未套用初速度的紀錄。
 
 ```bash
 GPU=8 bash scripts/run_letter_two_methods.sh outputs/letter_two_methods/letter
 ```
 
 輸出在 `outputs/letter_two_methods/letter/detailed_comparison/`：
-`loss_curves.png`、`material_accuracy.png`、`evaluation_accuracy.png`、
+`loss_curves.png`、`internal_parameter_paths.png`、`material_accuracy.png`、
+`evaluation_accuracy.png`、
 `training_curves.csv`、`frame_metrics.csv`、`REPORT.md`。
 訓練與獨立評估 log 在每個方法的 `train.log`、`evaluation.log`。
 入口拒絕已存在的輸出路徑，避免覆蓋既有實驗。
@@ -199,7 +205,9 @@ PSNR/EPE」；`analysis.md` 列出每個 E 點相對目前 checkpoint 的變化�
 ## Letter 材質參數接近 GT 的另一種診斷實驗
 
 完成上面的安裝與 Letter 場景資料還原後，可從本分支保存的 original 與
-projected-flow AD 起點，沿物理單位的 μ、κ 各取七個點直到論文 GT。
+projected-flow AD **舊實驗的最終 checkpoint** 各自起步，沿物理單位的
+μ、κ 各取七個點直到論文 GT。兩條線的 α=0 因而不同；
+這不是兩種訓練在共同初始化時的 epoch 0。
 所有點使用相同的 config、時間對齊、renderer、RAFT 和影像目標；
 這是固定參數路徑的評估，**不執行材質訓練**。
 

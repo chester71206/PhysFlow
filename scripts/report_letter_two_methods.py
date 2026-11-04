@@ -15,6 +15,8 @@ from scripts.score_universal_pacnerf_re import score
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--base',type=Path,required=True,help='Contains original/ and projected_flow_AD/')
 p.add_argument('--output',type=Path,help='Defaults to BASE/detailed_comparison')
+p.add_argument('--require-common-initialization',action='store_true',
+               help='Fail unless both runs have matching scale, gravity, velocity and initial E/nu')
 a=p.parse_args()
 BASE=a.base.resolve()
 OUT=(a.output or BASE/'detailed_comparison').resolve(); OUT.mkdir(parents=True,exist_ok=True)
@@ -23,7 +25,8 @@ truth=json.loads((ROOT/'data/pacnerf/groundtruth.json').read_text())['scenes']['
 data={}
 for method in methods:
  b=BASE/method;run=b/'train_ds1.0_ep50'; ev=json.loads((b/'evaluation/evaluation.json').read_text())
- cfg=json.loads((b/'physics_config.json').read_text()); scale=json.loads((run/'kinematics_manifest.json').read_text())['scale_origin']
+ cfg=json.loads((b/'physics_config.json').read_text())
+ kin=json.loads((run/'kinematics_manifest.json').read_text());scale=kin['scale_origin']
  final=json.loads((run/'ckpt/sim.json').read_text()); flow=torch.load(b/'evaluation/flow_fields.pt',map_location='cpu')
  assert ev['status']=='complete' and ev['finite'] and len(ev['selected_source_frames'])==16
  if method=='original':
@@ -31,11 +34,14 @@ for method in methods:
   es=[float(x) for x in re.findall(r'^- E:\s*([-+\d.eE]+)',log,re.M)]
   nus=[float(x) for x in re.findall(r'^- nu:\s*([-+\d.eE]+)',log,re.M)]
   assert len(loss)==len(es)==len(nus)==50,(len(loss),len(es),len(nus))
-  epochs=np.arange(1,51);params=[dict(E=e,nu=n) for e,n in zip(es,nus)]
+  loss_epochs=np.arange(0,50)
+  material_epochs=np.arange(0,51)
+  params=[dict(E=cfg['E'],nu=cfg['nu'])]+[dict(E=e,nu=n) for e,n in zip(es,nus)]
  else:
   rows=[json.loads(line) for line in (run/'training.jsonl').read_text().splitlines()]
   assert len(rows)==50 and [r['epoch'] for r in rows]==list(range(1,51))
-  epochs=np.arange(0,51);loss=[rows[0]['loss_before']]+[r['loss_after'] for r in rows]
+  loss_epochs=np.arange(0,51);material_epochs=np.arange(0,51)
+  loss=[rows[0]['loss_before']]+[r['loss_after'] for r in rows]
   params=[rows[0]['before']]+[r['after'] for r in rows]
   gate=json.loads((run/'gradient_check.json').read_text());post=json.loads((run/'post_gradient_check.json').read_text())
  err=((flow['simulated_flows']-flow['target_flows'])**2).sum(1).sqrt();mask=flow['foreground'].bool()
@@ -43,8 +49,9 @@ for method in methods:
  assert abs(float(err[mask].mean())-ev['epe']['foreground_px'])<1e-6
  assert abs(float(err.mean())-ev['epe']['whole_px'])<1e-6
  phys=[score('letter',p,scale) for p in params];initial=score('letter',cfg,scale);ending=score('letter',final,scale)
- data[method]=dict(ev=ev,epochs=epochs,loss=np.asarray(loss),params=params,phys=phys,initial=initial,ending=ending,
-                   scale=scale,fg=np.asarray(fg),whole=np.asarray(whole),flow=flow,
+ data[method]=dict(ev=ev,loss_epochs=loss_epochs,material_epochs=material_epochs,
+                   loss=np.asarray(loss),params=params,phys=phys,initial=initial,ending=ending,
+                   scale=scale,kinematics=kin,fg=np.asarray(fg),whole=np.asarray(whole),flow=flow,
                    gate=gate if method!='original' else None,post=post if method!='original' else None)
  assert abs(ending['mean_RE']-phys[-1]['mean_RE'])<1e-4
  if method=='original':
@@ -52,13 +59,24 @@ for method in methods:
 target_max_difference=float((data['original']['flow']['target_flows']-
                              data['projected_flow_AD']['flow']['target_flows']).abs().max())
 assert torch.equal(data['original']['flow']['foreground'],data['projected_flow_AD']['flow']['foreground'])
+initial_fields=('scale_origin','gravity_mpm','initial_velocity_mpm')
+original_kin=data['original']['kinematics'];projected_kin=data['projected_flow_AD']['kinematics']
+common_kinematics=all(key in original_kin and key in projected_kin and
+                      np.allclose(original_kin[key],projected_kin[key],rtol=0,atol=1e-6)
+                      for key in initial_fields)
+common_parameters=all(np.isclose(data['original']['params'][0][key],
+                                 data['projected_flow_AD']['params'][0][key],rtol=0,atol=5e-8)
+                      for key in ('E','nu'))
+if a.require_common_initialization and not (common_kinematics and common_parameters):
+ raise ValueError('Runs do not share initial E/nu, scale, gravity, and velocity')
 # One CSV contains the exact plotted training values; each method has its own loss definition.
 with (OUT/'training_curves.csv').open('w',newline='') as stream:
  w=csv.writer(stream);w.writerow(['method','epoch','training_loss','E_internal','nu','mu_physical','kappa_physical','mu_RE_percent','kappa_RE_percent','mean_RE_percent'])
  for m,d in data.items():
-  for i,ep in enumerate(d['epochs']):
+  losses_by_epoch=dict(zip(d['loss_epochs'],d['loss']))
+  for i,ep in enumerate(d['material_epochs']):
    p=d['params'][i];r=d['phys'][i]
-   w.writerow([m,ep,d['loss'][i],p['E'],p['nu'],r['physical']['mu'],r['physical']['kappa'],
+   w.writerow([m,ep,losses_by_epoch.get(ep,''),p['E'],p['nu'],r['physical']['mu'],r['physical']['kappa'],
                100*r['per_parameter_RE']['mu'],100*r['per_parameter_RE']['kappa'],100*r['mean_RE']])
 with (OUT/'frame_metrics.csv').open('w',newline='') as stream:
  w=csv.writer(stream);w.writerow(['method','frame_or_pair','foreground_EPE_px','whole_EPE_px','PSNR_dB'])
@@ -67,15 +85,15 @@ with (OUT/'frame_metrics.csv').open('w',newline='') as stream:
 plt.rcParams.update({'font.size':10,'axes.titlesize':12,'figure.facecolor':'white'})
 fig,axs=plt.subplots(2,2,figsize=(14,9),layout='constrained')
 for j,m in enumerate(methods):
- d=data[m];ax=axs[0,j];ax.plot(d['epochs'],d['loss'],color=colors[j],lw=1.8,marker='.',ms=3)
- ax.set(xlabel='Epoch (original: loss before update; projected: after update)',ylabel='Training loss',title=f'{m}: {d["loss"][0]:.6g} to {d["loss"][-1]:.6g}')
+ d=data[m];ax=axs[0,j];ax.plot(d['loss_epochs'],d['loss'],color=colors[j],lw=1.8,marker='.',ms=3)
+ ax.set(xlabel='Update count (0 = shared initial E/nu)',ylabel='Training loss',title=f'{m}: {d["loss"][0]:.6g} to {d["loss"][-1]:.6g}')
  ax.grid(alpha=.25)
  if j==0:
-  ax.text(.02,.04,'Five repeated 10-epoch windows; x=1..50\nLoss is measured before each update.',transform=ax.transAxes,va='bottom',fontsize=9,bbox=dict(facecolor='white',alpha=.9,edgecolor='none'))
+  ax.text(.02,.04,'Five repeated 10-update windows; x=0..49\nLoss is measured before each update.',transform=ax.transAxes,va='bottom',fontsize=9,bbox=dict(facecolor='white',alpha=.9,edgecolor='none'))
  else: ax.text(.02,.04,'x=0 initial; x=1..50 after each update.\nSame fixed projected-flow objective.',transform=ax.transAxes,va='bottom',fontsize=9,bbox=dict(facecolor='white',alpha=.9,edgecolor='none'))
- axs[1,j].plot(d['epochs'],d['loss']/d['loss'][0],color=colors[j],lw=1.8)
+ axs[1,j].plot(d['loss_epochs'],d['loss']/d['loss'][0],color=colors[j],lw=1.8)
  axs[1,j].axhline(1,color='gray',lw=.8)
- axs[1,j].set(xlabel='Epoch (original: before update; projected: after update)',ylabel='Loss / first recorded loss',title=f'{m}: change {(d["loss"][-1]/d["loss"][0]-1)*100:+.2f}%')
+ axs[1,j].set(xlabel='Update count (original: before update; projected: after update)',ylabel='Loss / first recorded loss',title=f'{m}: change {(d["loss"][-1]/d["loss"][0]-1)*100:+.2f}%')
  axs[1,j].grid(alpha=.25)
 fig.suptitle('Letter | 50 epochs each | different losses; compare trends only',fontsize=15)
 fig.savefig(OUT/'loss_curves.png',dpi=180);fig.savefig(OUT/'loss_curves.pdf');plt.close(fig)
@@ -84,7 +102,7 @@ for j,(key,gt) in enumerate([('mu',truth['mu']),('kappa',truth['kappa'])]):
  ax=axs[0,j];bx=axs[1,j]
  for i,m in enumerate(methods):
   d=data[m];v=np.array([r['physical'][key] for r in d['phys']]);re=np.array([r['per_parameter_RE'][key] for r in d['phys']])*100
-  ax.plot(d['epochs'],v,label=m,color=colors[i],lw=1.8);bx.plot(d['epochs'],re,label=m,color=colors[i],lw=1.8)
+  ax.plot(d['material_epochs'],v,label=m,color=colors[i],lw=1.8);bx.plot(d['material_epochs'],re,label=m,color=colors[i],lw=1.8)
  ax.axhline(gt,color='black',ls='--',lw=1,label=f'GT {gt:g}');ax.set_yscale('log')
  bx.axhline(0,color='black',ls='--',lw=.8);bx.set_yscale('symlog',linthresh=10)
  ax.set(xlabel='Epoch',ylabel=f'{key} physical units (log)',title=f'{key} estimate vs GT');bx.set(xlabel='Epoch',ylabel='Relative error % (symlog)',title=f'{key} material RE')
@@ -92,6 +110,16 @@ for j,(key,gt) in enumerate([('mu',truth['mu']),('kappa',truth['kappa'])]):
 fig.suptitle(f'Letter | material estimates use each trainer\'s own scale_origin '
              f'(original {data["original"]["scale"]:.6g}, projected {data["projected_flow_AD"]["scale"]:.6g})',fontsize=14)
 fig.savefig(OUT/'material_accuracy.png',dpi=180);fig.savefig(OUT/'material_accuracy.pdf');plt.close(fig)
+fig,axs=plt.subplots(1,2,figsize=(12,4.5),layout='constrained')
+for i,m in enumerate(methods):
+ d=data[m]
+ for ax,key,title in [(axs[0],'E','Internal E'),(axs[1],'nu','Internal Poisson ratio nu')]:
+  ax.plot(d['material_epochs'],[p[key] for p in d['params']],'.-',label=m,color=colors[i],ms=3)
+  ax.set(xlabel='Completed updates (0 = initial checkpoint)',title=title)
+  ax.grid(alpha=.25)
+for ax in axs:ax.legend()
+fig.suptitle('Letter | both methods start from the same internal E and nu',fontsize=14)
+fig.savefig(OUT/'internal_parameter_paths.png',dpi=180);plt.close(fig)
 fig,axs=plt.subplots(2,2,figsize=(14,9),layout='constrained')
 for i,m in enumerate(methods):
  d=data[m];axs[0,0].plot(range(1,16),d['fg'],label=m,color=colors[i],lw=1.7,marker='.')
@@ -112,9 +140,9 @@ for m,d in data.items():
  summary[m]=dict(status='complete',epochs=50,scale_origin=d['scale'],material_RE_at_common_evaluation_scale=score('letter',json.loads((BASE/m/'train_ds1.0_ep50/ckpt/sim.json').read_text()),data['projected_flow_AD']['scale']),training_loss_first=float(d['loss'][0]),training_loss_last=float(d['loss'][-1]),loss_percent_change=float((d['loss'][-1]/d['loss'][0]-1)*100),
   material_initial=d['initial'],material_final=d['ending'],evaluation=dict(EPE=d['ev']['epe'],PSNR=d['ev']['psnr_db']),gradient_gate_initial_max_RE=max(g) if g else None,gradient_gate_final_max_RE=max(p) if p else None)
 (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
-lines=['# Letter: original vs projected-flow AD, 50 epochs','',
-       'Training loss is method-specific. Original loss uses a moving 10-stage window and is logged before updates; projected flow is one fixed objective, x=0 before training and x=1..50 after updates. Their magnitudes must not be compared.',
-       f'Original uses scale_origin={data["original"]["scale"]:.9g}; projected uses {data["projected_flow_AD"]["scale"]:.9g}. RE curves convert using each trainer\'s own scale. The table reports material RE under both trainer-specific and common evaluator scales. Final EPE/PSNR share a protocol; if training scales differ, this is not a controlled comparison of identical training physics.',
+lines=['# Letter: original vs projected-flow AD, 50 updates','',
+       'Both methods start from the same internal E and nu. Training loss is method-specific: original uses a moving 10-stage window and is logged before updates at x=0..49; projected flow is one fixed objective, x=0 before training and x=1..50 after updates. Their loss magnitudes must not be compared.',
+       f'Initial E/nu match: {common_parameters}. Scale/gravity/velocity match: {common_kinematics}. Original scale_origin={data["original"]["scale"]:.9g}; projected={data["projected_flow_AD"]["scale"]:.9g}. RE curves convert using each trainer\'s own scale. The table reports material RE under both trainer-specific and common evaluator scales. Final EPE/PSNR share a protocol; if kinematics differ, this is not a controlled comparison of identical training physics.',
        '', '| Metric | Original | Projected-flow AD | Better |','|---|---:|---:|---|']
 def row(name,a,b,lower=True,unit=''):
  return f'| {name} | {a:.4f}{unit} | {b:.4f}{unit} | {"original" if (a<b if lower else a>b) else "projected"} |'
@@ -125,7 +153,7 @@ for name,fetch,lower,unit in [('Training loss, first',lambda d:d['loss'][0],True
 lines+=['',f'GT: mu={truth["mu"]}, kappa={truth["kappa"]}. Original final mu={a["ending"]["physical"]["mu"]:.3f}, kappa={a["ending"]["physical"]["kappa"]:.3f}; projected final mu={b["ending"]["physical"]["mu"]:.3f}, kappa={b["ending"]["physical"]["kappa"]:.3f}.',
  f'Projected-flow loss improves {abs(summary["projected_flow_AD"]["loss_percent_change"]):.2f}% and material mean RE falls from {b["initial"]["mean_RE"]*100:.1f}% to {b["ending"]["mean_RE"]*100:.1f}%; whole-image EPE and half MSE worsen versus original.',
  f'Projected initial/final AD/FD gates: {bool(b["gate"] and b["gate"].get("passed"))} / {bool(b["post"] and b["post"].get("passed"))}. Maximum relative errors: {summary["projected_flow_AD"]["gradient_gate_initial_max_RE"]*100:.3f}% and {summary["projected_flow_AD"]["gradient_gate_final_max_RE"]*100:.3f}%. The original method has no comparable full-horizon AD/FD gate.',
- '', 'Files: loss_curves.png/.pdf, material_accuracy.png/.pdf, evaluation_accuracy.png/.pdf, training_curves.csv, frame_metrics.csv, summary.json.',
+ '', 'Files: loss_curves.png/.pdf, internal_parameter_paths.png, material_accuracy.png/.pdf, evaluation_accuracy.png/.pdf, training_curves.csv, frame_metrics.csv, summary.json.',
  f'Initial internal parameters: original E={a["params"][0]["E"]:.9g}, nu={a["params"][0]["nu"]:.9g}; projected E={b["params"][0]["E"]:.9g}, nu={b["params"][0]["nu"]:.9g}.',
  f'Final internal parameters: original E={a["params"][-1]["E"]:.9g}, nu={a["params"][-1]["nu"]:.9g}; projected E={b["params"][-1]["E"]:.9g}, nu={b["params"][-1]["nu"]:.9g}.',
  'The original moving-window loss repeats each 10-epoch phase; it is not 50 evaluations of one fixed loss.',

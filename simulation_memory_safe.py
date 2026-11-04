@@ -1,6 +1,7 @@
 # Memory-lifetime experiment: preserves baseline physics and timing.
 import sys
 from pathlib import Path
+from utils.initial_kinematics import configure_initial_kinematics
 import hashlib
 import wandb
 import argparse
@@ -346,6 +347,12 @@ if __name__ == "__main__":
         scaling = 0.6
     if 'playdoh' in model_path:
         scaling = 0.75
+    # Match the shared scene config used by the projected-flow trainer.
+    # Without this override Letter silently uses the legacy hardcoded 2.0,
+    # so equal E/nu checkpoints start from different physical scales.
+    scaling = float(json.loads(Path(args.physics_config).read_text()).get('mpm_scaling', scaling))
+    if not math.isfinite(scaling) or scaling <= 0:
+        raise ValueError('mpm_scaling must be positive and finite')
     transformed_pos, scale_origin, original_mean_pos = transform2origin(rotated_pos, scaling=scaling)
     if not args.eval:
         with open(os.path.join(args.output_path, 'kinematics_manifest.json'), 'w') as out:
@@ -440,6 +447,12 @@ if __name__ == "__main__":
         grid_lim=material_params["grid_lim"],
     )
     mpm_solver.set_parameters_dict(material_params)
+    kinematics = configure_initial_kinematics(
+        mpm_solver, json.loads(Path(args.physics_config).read_text()),
+        rotation_matrices, scale_origin)
+    if not args.eval:
+        Path(args.output_path, 'kinematics_manifest.json').write_text(
+            json.dumps(kinematics, indent=2) + '\n')
 
     set_boundary_conditions(mpm_solver, bc_params, time_params)
     

@@ -56,5 +56,5 @@ PYTHON="$task_python" bash scripts/train_flow.sh \
   --key-frames 15 --output "$projected/evaluation" --dataset pacnerf \
   > "$projected/evaluation.log" 2>&1
 
-"$task_python" scripts/report_letter_two_methods.py --base "$root"
+"$task_python" scripts/report_letter_two_methods.py --base "$root" --require-common-initialization
 printf 'DONE: %s/detailed_comparison/REPORT.md\n' "$root"
