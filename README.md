@@ -148,7 +148,26 @@ CUDA_VISIBLE_DEVICES=0 WANDB_MODE=disabled python scripts/evaluate_universal_ref
   --output outputs/letter_flow_evaluation --dataset pacnerf
 ```
 
-## Letter 材質參數接近 GT 的診斷實驗
+## Letter 目前參數的 E/nu 局部曲線（建議先跑）
+
+以 `data/pacnerf/letter_material_starts/projected_flow_ad.json` 為唯一中心。
+E-only 曲線**固定 nu**、將 E 從 0.75 E0 掃到 1.25 E0，共 41 點，
+先測中心和最近的正負擾動。nu-only 曲線固定 E；其餘為局部 7×7
+E/nu 網格。所有點用同一套 renderer/RAFT 評估，沒有分 original/projected
+評估方法。預設共 101 個不重複點，每次最多新增 10 次，可續跑。
+
+```bash
+GPU=8 bash scripts/run_letter_local_E_nu.sh --plan-only
+GPU=8 MAX_NEW=10 bash scripts/run_letter_local_E_nu.sh
+```
+
+`outputs/letter_local_E_nu/E_only_curves.png` 直接回答「加一點 E 是否改善
+PSNR/EPE」；`analysis.md` 列出每個 E 點相對目前 checkpoint 的變化。
+要換另一個起點，使用 `--checkpoint path/to/sim.json`，並指定新的
+`OUTPUT=...`。`--e-span`、`--e-points` 可改掃描範圍和密度。
+已有的七點實驗若在預設位置，會沿用中心點評估。
+
+## Letter 材質參數接近 GT 的另一種診斷實驗
 
 完成上面的安裝與 Letter 場景資料還原後，可從本分支保存的 original 與
 projected-flow AD 起點，沿物理單位的 μ、κ 各取七個點直到論文 GT。
@@ -168,8 +187,9 @@ GPU=0 bash scripts/run_letter_material_to_gt.sh
 `--reuse-only`。本分支包含兩個起點的材質 JSON、共同評估的 kinematics
 manifest、材質 GT、Letter 場景與 Gaussian checkpoint。
 
-若要檢查「往 GT 走是否單調變好」和「反方向是否讓影像更好」，使用較密的
-材質 landscape 掃描。預設兩條各 25 點的 GT 路徑、original/projected/GT
+若要另外檢查物理單位 μ/κ 朝 GT 的方向，可用先前的
+material landscape 掃描。它同時改變內部 E 和 nu，**不能單獨回答
+「增加 E 是否改善 PSNR」**。預設兩條各 25 點的 GT 路徑、original/projected/GT
 三個中心的四種正反方向，以及 GT 周圍 5×5 網格；重複參數只評估一次，
 合計 153 次獨立 forward 評估。會讀取上一段七點 sweep 的相同結果，
 每次最多新增 10 次 GPU 評估，可用同一指令續跑：
