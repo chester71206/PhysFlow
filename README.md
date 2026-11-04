@@ -141,6 +141,26 @@ CUDA_VISIBLE_DEVICES=0 WANDB_MODE=disabled python scripts/evaluate_universal_ref
   --output outputs/letter_flow_evaluation --dataset pacnerf
 ```
 
+## Letter 材質參數接近 GT 的診斷實驗
+
+完成上面的安裝與 Letter 場景資料還原後，可從本分支保存的 original 與
+projected-flow AD 起點，沿物理單位的 μ、κ 各取七個點直到論文 GT。
+所有點使用相同的 config、時間對齊、renderer、RAFT 和影像目標；
+這是固定參數路徑的評估，**不執行材質訓練**。
+
+```bash
+GPU=0 bash scripts/run_letter_material_to_gt.sh --plan-only
+GPU=0 bash scripts/run_letter_material_to_gt.sh
+```
+
+`GPU` 選擇可用 GPU；`POINTS`（預設 7）、`SPACING`（`log` 或 `linear`）、
+`OUTPUT` 可用環境變數指定。同一指令可在中斷後接續；每完成一點即更新
+`outputs/letter_material_to_gt/results.md`、`results.csv`、`status.json`，
+完成的點也有 `frame_metrics.csv`。結束後生成 `metric_curves.png` 和 PDF。
+首次執行可能下載 RAFT weights。要只讀取已完成結果而不使用 GPU，可加
+`--reuse-only`。本分支包含兩個起點的材質 JSON、共同評估的 kinematics
+manifest 和材質 GT；場景與 Gaussian checkpoint 仍需按第 2 節搬移。
+
 ## 程式範圍
 
 | 檔案 | 用途 |

@@ -1,0 +1,17 @@
+{
+  "gravity_mpm": [
+    0.0,
+    -7.5496954917907715,
+    0.0
+  ],
+  "initial_velocity_mpm": [
+    1.9423308278323625e-15,
+    -0.3859749734401703,
+    1.8472342270858854e-15
+  ],
+  "gravity_space": "world",
+  "initial_velocity_space": "world",
+  "scale_origin": 0.7703770995140076,
+  "material_space": "mpm",
+  "boundary_space": "mpm"
+}
