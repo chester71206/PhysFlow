@@ -1,4 +1,5 @@
-"""Wait for an idle GPU, then run resumable 10x/100x E starts without sharing busy GPUs."""
+"""Run resumable 10x/100x E starts on an idle or explicitly selected GPU."""
+import argparse
 import csv
 import json
 import os
@@ -25,35 +26,59 @@ def gpu_state():
 
 def wait_idle(deadline):
     consecutive=0
+    checks=0
     while time.monotonic()<deadline:
         try:
-            free=[index for index,mem,util in gpu_state() if mem<300 and util<10]
-        except Exception:
+            state=gpu_state()
+            free=[index for index,mem,util in state if mem<300 and util<10]
+        except Exception as exc:
+            state=[]
             free=[]
+            if checks%3==0:print(f'GPU check failed: {exc}',flush=True)
+        if checks%3==0:
+            detail=', '.join(f'{index}:{mem}MiB/{util}%' for index,mem,util in state)
+            print(f'Waiting for idle GPU (need <300 MiB and <10%): {detail}',flush=True)
+        checks+=1
         if free:
             consecutive+=1
-            if consecutive>=3:return free[0]
+            if consecutive>=3:
+                print(f'Selected idle GPU {free[0]}',flush=True)
+                return free[0]
         else:consecutive=0
         time.sleep(20)
     return None
 
+def select_gpu(requested,deadline):
+    if requested is None:return wait_idle(deadline)
+    available={index for index,_,_ in gpu_state()}
+    if requested not in available:raise ValueError(f'GPU {requested} not found; available: {sorted(available)}')
+    print(f'Using explicitly selected GPU {requested}; idle check bypassed',flush=True)
+    return requested
+
 def execute(command,log,timeout,gpu):
     env=os.environ.copy();env['CUDA_VISIBLE_DEVICES']=str(gpu)
+    print(f'Running on GPU {gpu}; details: {log}',flush=True)
     with log.open('a') as f:
         f.write('\nCOMMAND '+json.dumps(command)+'\n');f.flush()
         try:
             p=subprocess.run(command,env=env,stdout=f,stderr=subprocess.STDOUT,timeout=timeout)
+            print(f'Finished {log.name}: exit {p.returncode}',flush=True)
             return p.returncode
         except subprocess.TimeoutExpired:
             f.write(f'\nTIMEOUT {timeout}s; checkpoint retained\n')
+            print(f'Timed out {log.name} after {timeout}s; checkpoint retained',flush=True)
             return 124
 
 def main():
+    ap=argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--gpu',type=int,help='physical nvidia-smi GPU index; bypass automatic idle check')
+    args=ap.parse_args()
     ROOT.mkdir(parents=True,exist_ok=True)
     rows=[]
     deadline=time.monotonic()+12*3600
     for label,scene in SCENES.items():
         for name,ratio,epochs in STARTS:
+            print(f'Starting {label} {name} (E/GT={ratio:g})',flush=True)
             out=ROOT/label;out.mkdir(exist_ok=True)
             final=out/name/'final.json'
             probe=out/f'start_probe_{name}.json'
@@ -67,7 +92,7 @@ def main():
             if final.exists() and json.loads(final.read_text()).get('updates',0)>=epochs:
                 row['status']='FINISHED';row['final']=json.loads(final.read_text())
             else:
-                gpu=wait_idle(deadline)
+                gpu=select_gpu(args.gpu,deadline)
                 if gpu is None:
                     row['status']='NO_IDLE_GPU_WITHIN_12H';rows.append(row);break
                 row['gpu']=gpu
@@ -88,7 +113,7 @@ def main():
                 # The gate is diagnostic; a finite forward is sufficient to test
                 # whether the original reverse-AD optimizer can move from the start.
                 for attempt in range(2):
-                    gpu=wait_idle(deadline)
+                    gpu=select_gpu(args.gpu,deadline)
                     if gpu is None:break
                     code=execute(base+['--epochs',str(epochs)],
                                  ROOT/f'{label}_{name}_train.log',1800,gpu)

@@ -18,6 +18,8 @@ python scripts/verify_synthetic_transfer.py
 python scripts/run_synthetic_wonderplay_order_magnitudes.py
 ```
 
+If an available GPU has persistent memory allocations and is rejected by the conservative automatic idle rule, specify its physical `nvidia-smi` index explicitly, for example `python scripts/run_synthetic_wonderplay_order_magnitudes.py --gpu 0`. Do this only for a GPU you are free to use. The runner prints which GPU it selected and where each trial logs its updates.
+
 The validated local environment used Python 3.9, PyTorch 2.2.0+cu118, `warp-lang` 0.10.1, `trimesh` 4.4.0 and `opencv-python` 4.8.1.78. The WonderPlay repository is pinned as a Git submodule. `scripts/install_flow.sh` needs a CUDA 11.8 toolkit and compiles CUDA extensions. Set `CUDA_HOME` to the toolkit on that machine. The runner uses the current Python interpreter, picks an idle GPU after three checks, and never assumes GPU 8. Run it from the repository root.
 
 For a quick data and numerical preflight before the full queue:

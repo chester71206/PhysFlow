@@ -6,6 +6,8 @@ The existing Warp MPM, `RepairedTemporalRollout` reverse AD, WonderPlay Gaussian
 
 `scripts/run_synthetic_wonderplay_order_magnitudes.py` waits for a genuinely idle GPU, requires three idle checks, and then runs a forward probe, initial AD-versus-centered-difference gradient check, and checkpointed training for each start. It never interrupts a GPU user. The forward probe and gradient gate have per-run timeouts; training has an 1800-second timeout and can resume. See `runner_state.json`, per-start logs, `history.csv`, `optimizer.pt`, and the generated `REPORT.md` as trials complete. A high-E start that is nonfinite under the fixed solver timestep is recorded as a numerical validity failure, not silently clamped or counted as an optimizer minimum.
 
+If you have confirmed a specific physical GPU is available, run `python scripts/run_synthetic_wonderplay_order_magnitudes.py --gpu N` with its `nvidia-smi` index. This bypasses the runner's conservative idle rule. `CUDA_VISIBLE_DEVICES=N` alone does not select the runner's GPU because the runner chooses and sets that variable for each child process. The terminal prints waiting and per-trial status; detailed updates remain in the per-trial logs.
+
 At launch, every GPU was occupied by other processes; `availability_at_launch.json` records the snapshot. The detached runner has a 12-hour idle-GPU wait limit, and its outer process has a 13-hour timeout. No 10×/100× result should be inferred until a trial's probe and final files exist.
 
 Recovery is assessed by final evaluated Gaussian target loss ≤10⁻³, E relative error ≤2%, and ν absolute error ≤.01. This test does not establish recovery from independent Blender flow; that target has a nonzero loss and gradient at GT.
