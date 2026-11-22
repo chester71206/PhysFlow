@@ -99,9 +99,10 @@ def main():
                 if not probe.exists():
                     code=execute(base+['--start-probe','--epochs','0'],
                                  ROOT/f'{label}_{name}_probe.log',240,gpu)
-                    if code or not probe.exists() or not json.loads(probe.read_text()).get('finite'):
-                        row['status']='NONFINITE_OR_FAILED_FORWARD_PROBE';row['probe_exit']=code
-                        rows.append(row);write_json(ROOT/'runner_state.json',rows);continue
+                    row['probe_exit']=code
+                if not probe.exists() or not json.loads(probe.read_text()).get('finite'):
+                    row['status']='NONFINITE_OR_FAILED_FORWARD_PROBE'
+                    rows.append(row);write_json(ROOT/'runner_state.json',rows);continue
                 row['probe']=json.loads(probe.read_text())
                 gate=out/f'gradient_gate_{name}.json'
                 if not gate.exists():
