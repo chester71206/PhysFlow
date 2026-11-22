@@ -1,0 +1,44 @@
+[
+  {
+    "name": "football_deflated",
+    "vertices": 1190,
+    "faces": 1386,
+    "nonmanifold_edges": 0,
+    "dimensions": [
+      0.21463915705680847,
+      0.2221573293209076,
+      0.2023458480834961
+    ],
+    "location": [
+      -0.14999999105930328,
+      0.0,
+      0.0
+    ],
+    "uv_layers": 1,
+    "material_names": [
+      "football"
+    ],
+    "visible": true
+  },
+  {
+    "name": "football_inflated",
+    "vertices": 962,
+    "faces": 960,
+    "nonmanifold_edges": 0,
+    "dimensions": [
+      0.22031748294830322,
+      0.2205868512392044,
+      0.22188469767570496
+    ],
+    "location": [
+      0.14999999105930328,
+      0.0,
+      0.11100000143051147
+    ],
+    "uv_layers": 1,
+    "material_names": [
+      "football"
+    ],
+    "visible": true
+  }
+]

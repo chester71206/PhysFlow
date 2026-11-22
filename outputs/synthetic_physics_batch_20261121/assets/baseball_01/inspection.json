@@ -1,0 +1,23 @@
+[
+  {
+    "name": "baseball_01",
+    "vertices": 1358,
+    "faces": 1356,
+    "nonmanifold_edges": 0,
+    "dimensions": [
+      0.07397906482219696,
+      0.07537996023893356,
+      0.07557933032512665
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "uv_layers": 1,
+    "material_names": [
+      "baseball_01"
+    ],
+    "visible": true
+  }
+]

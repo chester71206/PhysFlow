@@ -1,0 +1,66 @@
+{
+  "scene": "outputs/synthetic_physics_batch_20261121/scenes/football_deflated_2s",
+  "frames": [
+    0,
+    2,
+    4,
+    6,
+    8
+  ],
+  "steps": [
+    167,
+    333,
+    500,
+    667
+  ],
+  "dt_s": 0.0005,
+  "views": [
+    0,
+    1,
+    2
+  ],
+  "resolution": 128,
+  "gt_E_Pa": 12000.0,
+  "gt_nu": 0.32,
+  "native_vs_repaired_max_position_error_m": 3.5762786865234375e-07,
+  "max_camera_projection_error_px": 1.6809693747177334e-05,
+  "gaussian_sigma_m": 0.009522596374154091,
+  "target": [
+    {
+      "view": 0,
+      "mean_flow_px": 1.7494421005249023,
+      "max_flow_px": 23.01856231689453,
+      "foreground_pixels": [
+        1733,
+        1686,
+        1540,
+        1567
+      ]
+    },
+    {
+      "view": 1,
+      "mean_flow_px": 1.9595952033996582,
+      "max_flow_px": 21.639650344848633,
+      "foreground_pixels": [
+        2203,
+        2074,
+        1860,
+        1882
+      ]
+    },
+    {
+      "view": 2,
+      "mean_flow_px": 1.7805373668670654,
+      "max_flow_px": 22.621679306030273,
+      "foreground_pixels": [
+        1953,
+        1854,
+        1628,
+        1802
+      ]
+    }
+  ],
+  "gt_loss": 1.7388146478225508e-11,
+  "target_kind": "gaussian-exact",
+  "target_definition": "same WonderPlay Gaussian rasterizer; source native GT MPM particle positions; source covariances from GT repaired rollout; fixed Blender object mask"
+}

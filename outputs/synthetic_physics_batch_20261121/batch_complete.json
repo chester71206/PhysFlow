@@ -1,0 +1,8 @@
+{
+  "scenes": 9,
+  "status_counts": {
+    "PASS": 3,
+    "NEEDS_REVIEW": 3,
+    "FAIL": 3
+  }
+}

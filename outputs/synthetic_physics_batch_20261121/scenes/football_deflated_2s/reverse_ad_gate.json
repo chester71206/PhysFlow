@@ -1,0 +1,12 @@
+{
+  "steps": [
+    2,
+    8
+  ],
+  "forward_max_abs_error_m": 1.4901161193847656e-08,
+  "gradient_E_internal": -1.7601258150534704e-05,
+  "gradient_nu": 1.6001136415866313e-08,
+  "finite_gradients": true,
+  "reverse_ad_executed": true,
+  "pass_gate": true
+}

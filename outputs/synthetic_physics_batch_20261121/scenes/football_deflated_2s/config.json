@@ -1,0 +1,36 @@
+{
+  "asset": "outputs/synthetic_physics_batch_20261121/assets/football/deflated_mesh.npz",
+  "E_Pa": 12000.0,
+  "E_solver_internal": 0.0012,
+  "solver_E_scale_Pa": 10000000.0,
+  "nu": 0.32,
+  "density_kg_m3": 850.0,
+  "solver_forward": "mpm_solver_warp.mpm_solver_warp.MPM_Simulator_WARP.p2g2p",
+  "candidate_forward": "same MPM_Simulator_WARP.p2g2p with altered E/nu",
+  "reverse_ad_engine": "mpm_solver_warp.repaired_temporal_rollout.RepairedTemporalRollout",
+  "gravity_m_s2": [
+    0,
+    0,
+    -9.8
+  ],
+  "height_m": 0.07,
+  "ground_z_m": 0.12,
+  "ground_contact": "Warp add_surface_collider sticky static",
+  "dt_s": 0.0005,
+  "fps": 24,
+  "duration_s": 2.0,
+  "grid_n": 64,
+  "grid_lim_m": 1.0,
+  "particle_spacing_m": 0.014,
+  "n_surface": 1190,
+  "n_interior": 1476,
+  "mesh_volume_m3": 0.004047896797096379,
+  "initial_velocity_m_s": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "particle_volume_rule": "uniform per particle, normalized to mesh volume",
+  "random_seed": 0,
+  "reverse_ad_path_constructed": true
+}

@@ -1,0 +1,8 @@
+{
+  "target_kind": "gaussian-exact",
+  "loss": 1.7388146478225508e-11,
+  "gradient_E_internal": 0.00840519554913044,
+  "gradient_nu": 1.5181641401795787e-06,
+  "normalized_gradient_logE": 1.0086234658956527e-05,
+  "normalized_gradient_nu_0p05": 7.590820700897894e-08
+}

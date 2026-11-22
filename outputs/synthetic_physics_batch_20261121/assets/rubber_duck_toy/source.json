@@ -1,0 +1,54 @@
+{
+  "asset": "rubber_duck_toy",
+  "license": "CC0",
+  "source": "https://polyhaven.com/a/rubber_duck_toy",
+  "files": {
+    "rubber_duck_toy_2k.blend": {
+      "include": {
+        "textures/rubber_duck_toy_metal_2k.exr": {
+          "size": 13296,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_metal_2k.exr",
+          "md5": "54e6a16aba427900004c4f3c5d3293fb"
+        },
+        "textures/rubber_duck_toy_rough_2k.exr": {
+          "size": 1537104,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_rough_2k.exr",
+          "md5": "502f5152a59f7ad8c80db1d511bae4d2"
+        },
+        "textures/rubber_duck_toy_nor_gl_2k.exr": {
+          "size": 365920,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_nor_gl_2k.exr",
+          "md5": "9a4dd78ed9f81cd295699f9caba28136"
+        },
+        "textures/rubber_duck_toy_diff_2k.jpg": {
+          "size": 789401,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_duck_toy/rubber_duck_toy_diff_2k.jpg",
+          "md5": "8ab1c742d2a4543a7e4cd588cfb6fe28"
+        }
+      },
+      "size": 196713,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/rubber_duck_toy/rubber_duck_toy_2k.blend",
+      "md5": "36048a2cc88a8ed27726df5472bc2ffe"
+    },
+    "textures/rubber_duck_toy_metal_2k.exr": {
+      "size": 13296,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_metal_2k.exr",
+      "md5": "54e6a16aba427900004c4f3c5d3293fb"
+    },
+    "textures/rubber_duck_toy_rough_2k.exr": {
+      "size": 1537104,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_rough_2k.exr",
+      "md5": "502f5152a59f7ad8c80db1d511bae4d2"
+    },
+    "textures/rubber_duck_toy_nor_gl_2k.exr": {
+      "size": 365920,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/rubber_duck_toy/rubber_duck_toy_nor_gl_2k.exr",
+      "md5": "9a4dd78ed9f81cd295699f9caba28136"
+    },
+    "textures/rubber_duck_toy_diff_2k.jpg": {
+      "size": 789401,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_duck_toy/rubber_duck_toy_diff_2k.jpg",
+      "md5": "8ab1c742d2a4543a7e4cd588cfb6fe28"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "asset": "outputs/synthetic_physics_batch_20261121/assets/rubber_duck_toy/mesh.npz",
+  "E_Pa": 50000.0,
+  "E_solver_internal": 0.005,
+  "solver_E_scale_Pa": 10000000.0,
+  "nu": 0.32,
+  "density_kg_m3": 950.0,
+  "gravity_m_s2": [
+    0,
+    0,
+    -9.8
+  ],
+  "height_m": 0.035,
+  "ground_z_m": 0.12,
+  "ground_contact": "Warp add_surface_collider sticky static",
+  "dt_s": 0.0005,
+  "fps": 24,
+  "duration_s": 1.0,
+  "grid_n": 64,
+  "grid_lim_m": 1.0,
+  "particle_spacing_m": 0.016,
+  "n_surface": 2146,
+  "n_interior": 1758,
+  "mesh_volume_m3": 0.007199609492200677,
+  "initial_velocity_m_s": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "particle_volume_rule": "uniform per particle, normalized to mesh volume",
+  "random_seed": 0,
+  "reverse_ad_path_constructed": true,
+  "solver_forward": "mpm_solver_warp.mpm_solver_warp.MPM_Simulator_WARP.p2g2p",
+  "candidate_forward": "same MPM_Simulator_WARP.p2g2p with altered E/nu",
+  "reverse_ad_engine": "mpm_solver_warp.repaired_temporal_rollout.RepairedTemporalRollout"
+}

@@ -1,0 +1,875 @@
+{
+  "kind": "tracked_surface_geometric_visible_flow",
+  "not_equal_to": "WonderPlay Gaussian rasterized flow or photometric optical flow",
+  "visibility": "source Blender object-index mask AND current mesh z-buffer; destination Blender mask AND 1.5 mm mesh z-buffer tolerance",
+  "camera_projection": "perspective, fixed c2w and K",
+  "mean_mask_iou": 0.992201020936805,
+  "min_mask_iou": 0.990711950888942,
+  "mean_valid_fraction": 0.9907470645609702,
+  "frames": [
+    {
+      "camera": 0,
+      "frame": 0,
+      "mask_iou": 0.9926224010731053,
+      "valid_fraction": 0.9838588588588588
+    },
+    {
+      "camera": 0,
+      "frame": 1,
+      "mask_iou": 0.9923409048244791,
+      "valid_fraction": 0.9936438273239756
+    },
+    {
+      "camera": 0,
+      "frame": 2,
+      "mask_iou": 0.9918858637132749,
+      "valid_fraction": 0.9665025394486876
+    },
+    {
+      "camera": 0,
+      "frame": 3,
+      "mask_iou": 0.9916520577677602,
+      "valid_fraction": 0.9898981395740383
+    },
+    {
+      "camera": 0,
+      "frame": 4,
+      "mask_iou": 0.9911777335363235,
+      "valid_fraction": 0.9903509117403805
+    },
+    {
+      "camera": 0,
+      "frame": 5,
+      "mask_iou": 0.9927603203943315,
+      "valid_fraction": 0.99344453064391
+    },
+    {
+      "camera": 0,
+      "frame": 6,
+      "mask_iou": 0.9919231358138111,
+      "valid_fraction": 0.9884613900358893
+    },
+    {
+      "camera": 0,
+      "frame": 7,
+      "mask_iou": 0.9922222652168866,
+      "valid_fraction": 0.9725060447702988
+    },
+    {
+      "camera": 0,
+      "frame": 8,
+      "mask_iou": 0.9913754707049439,
+      "valid_fraction": 0.9886864891357622
+    },
+    {
+      "camera": 0,
+      "frame": 9,
+      "mask_iou": 0.9924547283702213,
+      "valid_fraction": 0.99341104916371
+    },
+    {
+      "camera": 0,
+      "frame": 10,
+      "mask_iou": 0.9919096968062565,
+      "valid_fraction": 0.9930865731929933
+    },
+    {
+      "camera": 0,
+      "frame": 11,
+      "mask_iou": 0.9926630434782608,
+      "valid_fraction": 0.9831058621094209
+    },
+    {
+      "camera": 0,
+      "frame": 12,
+      "mask_iou": 0.990711950888942,
+      "valid_fraction": 0.9894982497082847
+    },
+    {
+      "camera": 0,
+      "frame": 13,
+      "mask_iou": 0.9916708635183822,
+      "valid_fraction": 0.9917962340807875
+    },
+    {
+      "camera": 0,
+      "frame": 14,
+      "mask_iou": 0.9924617287768672,
+      "valid_fraction": 0.989794725976707
+    },
+    {
+      "camera": 0,
+      "frame": 15,
+      "mask_iou": 0.9914348577714914,
+      "valid_fraction": 0.9942934136482524
+    },
+    {
+      "camera": 0,
+      "frame": 16,
+      "mask_iou": 0.9909878000787091,
+      "valid_fraction": 0.9905087168897184
+    },
+    {
+      "camera": 0,
+      "frame": 17,
+      "mask_iou": 0.9915787022663769,
+      "valid_fraction": 0.9933857774646785
+    },
+    {
+      "camera": 0,
+      "frame": 18,
+      "mask_iou": 0.9922183552966019,
+      "valid_fraction": 0.9919208638764089
+    },
+    {
+      "camera": 0,
+      "frame": 19,
+      "mask_iou": 0.9911906454926128,
+      "valid_fraction": 0.9904348172651548
+    },
+    {
+      "camera": 0,
+      "frame": 20,
+      "mask_iou": 0.9915742446212329,
+      "valid_fraction": 0.9918583511184886
+    },
+    {
+      "camera": 0,
+      "frame": 21,
+      "mask_iou": 0.9922663212028422,
+      "valid_fraction": 0.9939468270295932
+    },
+    {
+      "camera": 0,
+      "frame": 22,
+      "mask_iou": 0.9924362426738477,
+      "valid_fraction": 0.9934958700770121
+    },
+    {
+      "camera": 0,
+      "frame": 23,
+      "mask_iou": 0.9925996280026911,
+      "valid_fraction": 0.9926241926481142
+    },
+    {
+      "camera": 0,
+      "frame": 24,
+      "mask_iou": 0.9928404730825521,
+      "valid_fraction": 0.9931872509960159
+    },
+    {
+      "camera": 0,
+      "frame": 25,
+      "mask_iou": 0.9919358042346959,
+      "valid_fraction": 0.992110532639167
+    },
+    {
+      "camera": 0,
+      "frame": 26,
+      "mask_iou": 0.9925920025489884,
+      "valid_fraction": 0.9936200946954498
+    },
+    {
+      "camera": 0,
+      "frame": 27,
+      "mask_iou": 0.992398917542184,
+      "valid_fraction": 0.9916990816858483
+    },
+    {
+      "camera": 0,
+      "frame": 28,
+      "mask_iou": 0.9933389174743728,
+      "valid_fraction": 0.9871105043366527
+    },
+    {
+      "camera": 0,
+      "frame": 29,
+      "mask_iou": 0.9921325878594249,
+      "valid_fraction": 0.9878436581733285
+    },
+    {
+      "camera": 0,
+      "frame": 30,
+      "mask_iou": 0.9917810405362273,
+      "valid_fraction": 0.9904256175074423
+    },
+    {
+      "camera": 0,
+      "frame": 31,
+      "mask_iou": 0.9916603487490523,
+      "valid_fraction": 0.9922742636407532
+    },
+    {
+      "camera": 0,
+      "frame": 32,
+      "mask_iou": 0.9919718816152094,
+      "valid_fraction": 0.9899339668223547
+    },
+    {
+      "camera": 0,
+      "frame": 33,
+      "mask_iou": 0.9924935116789778,
+      "valid_fraction": 0.9919539767469928
+    },
+    {
+      "camera": 0,
+      "frame": 34,
+      "mask_iou": 0.9918300653594772,
+      "valid_fraction": 0.9905573190822518
+    },
+    {
+      "camera": 0,
+      "frame": 35,
+      "mask_iou": 0.9922285987565758,
+      "valid_fraction": 0.9942161706229666
+    },
+    {
+      "camera": 0,
+      "frame": 36,
+      "mask_iou": 0.9926728257406817,
+      "valid_fraction": 0.990813543003851
+    },
+    {
+      "camera": 0,
+      "frame": 37,
+      "mask_iou": 0.9922104761147762,
+      "valid_fraction": 0.9947128094208123
+    },
+    {
+      "camera": 0,
+      "frame": 38,
+      "mask_iou": 0.9918240990633433,
+      "valid_fraction": 0.9924769907963186
+    },
+    {
+      "camera": 0,
+      "frame": 39,
+      "mask_iou": 0.9915566654774646,
+      "valid_fraction": 0.9915647237546974
+    },
+    {
+      "camera": 0,
+      "frame": 40,
+      "mask_iou": 0.9925556347509306,
+      "valid_fraction": 0.9916620122875608
+    },
+    {
+      "camera": 0,
+      "frame": 41,
+      "mask_iou": 0.9920129690403701,
+      "valid_fraction": 0.9932639802303799
+    },
+    {
+      "camera": 0,
+      "frame": 42,
+      "mask_iou": 0.9922532706217145,
+      "valid_fraction": 0.9911571400119498
+    },
+    {
+      "camera": 0,
+      "frame": 43,
+      "mask_iou": 0.9919902146464646,
+      "valid_fraction": 0.9908118213277117
+    },
+    {
+      "camera": 0,
+      "frame": 44,
+      "mask_iou": 0.9923883893358574,
+      "valid_fraction": 0.9888725509676907
+    },
+    {
+      "camera": 0,
+      "frame": 45,
+      "mask_iou": 0.9912926992632284,
+      "valid_fraction": 0.9965421303656598
+    },
+    {
+      "camera": 0,
+      "frame": 46,
+      "mask_iou": 0.9915317657253141,
+      "valid_fraction": 0.9993247000873917
+    },
+    {
+      "camera": 0,
+      "frame": 47,
+      "mask_iou": 0.991729352920326,
+      "valid_fraction": 0.9979746634367181
+    },
+    {
+      "camera": 1,
+      "frame": 0,
+      "mask_iou": 0.9930143714753502,
+      "valid_fraction": 0.9915362913567581
+    },
+    {
+      "camera": 1,
+      "frame": 1,
+      "mask_iou": 0.991924480991187,
+      "valid_fraction": 0.991635687732342
+    },
+    {
+      "camera": 1,
+      "frame": 2,
+      "mask_iou": 0.9912920055240141,
+      "valid_fraction": 0.9726790758871561
+    },
+    {
+      "camera": 1,
+      "frame": 3,
+      "mask_iou": 0.9931131762363093,
+      "valid_fraction": 0.9880942434622776
+    },
+    {
+      "camera": 1,
+      "frame": 4,
+      "mask_iou": 0.9925225510365564,
+      "valid_fraction": 0.9922669111492007
+    },
+    {
+      "camera": 1,
+      "frame": 5,
+      "mask_iou": 0.9919901889395624,
+      "valid_fraction": 0.992814093648586
+    },
+    {
+      "camera": 1,
+      "frame": 6,
+      "mask_iou": 0.9917147111603223,
+      "valid_fraction": 0.9907599907599908
+    },
+    {
+      "camera": 1,
+      "frame": 7,
+      "mask_iou": 0.9919788178490772,
+      "valid_fraction": 0.9786073166902183
+    },
+    {
+      "camera": 1,
+      "frame": 8,
+      "mask_iou": 0.9938467725718882,
+      "valid_fraction": 0.9871722240207187
+    },
+    {
+      "camera": 1,
+      "frame": 9,
+      "mask_iou": 0.9923574368018813,
+      "valid_fraction": 0.9927725118483413
+    },
+    {
+      "camera": 1,
+      "frame": 10,
+      "mask_iou": 0.9918721213763207,
+      "valid_fraction": 0.9936004994732118
+    },
+    {
+      "camera": 1,
+      "frame": 11,
+      "mask_iou": 0.9923281665883826,
+      "valid_fraction": 0.9863521615651625
+    },
+    {
+      "camera": 1,
+      "frame": 12,
+      "mask_iou": 0.9937465147773441,
+      "valid_fraction": 0.98857669646078
+    },
+    {
+      "camera": 1,
+      "frame": 13,
+      "mask_iou": 0.9922101307445392,
+      "valid_fraction": 0.9908864954432477
+    },
+    {
+      "camera": 1,
+      "frame": 14,
+      "mask_iou": 0.9922030330201551,
+      "valid_fraction": 0.9894306707005619
+    },
+    {
+      "camera": 1,
+      "frame": 15,
+      "mask_iou": 0.9923639960435212,
+      "valid_fraction": 0.9967705924567419
+    },
+    {
+      "camera": 1,
+      "frame": 16,
+      "mask_iou": 0.9923676197255507,
+      "valid_fraction": 0.9910337132382243
+    },
+    {
+      "camera": 1,
+      "frame": 17,
+      "mask_iou": 0.9923520414166372,
+      "valid_fraction": 0.9943087502964193
+    },
+    {
+      "camera": 1,
+      "frame": 18,
+      "mask_iou": 0.9919125769291463,
+      "valid_fraction": 0.990096647178141
+    },
+    {
+      "camera": 1,
+      "frame": 19,
+      "mask_iou": 0.9924073779615201,
+      "valid_fraction": 0.9927498497897056
+    },
+    {
+      "camera": 1,
+      "frame": 20,
+      "mask_iou": 0.9920854768500198,
+      "valid_fraction": 0.9932189868368568
+    },
+    {
+      "camera": 1,
+      "frame": 21,
+      "mask_iou": 0.9924314471390078,
+      "valid_fraction": 0.9912557396685965
+    },
+    {
+      "camera": 1,
+      "frame": 22,
+      "mask_iou": 0.9930142509281067,
+      "valid_fraction": 0.9910355362598489
+    },
+    {
+      "camera": 1,
+      "frame": 23,
+      "mask_iou": 0.9931378416118093,
+      "valid_fraction": 0.9915237215281404
+    },
+    {
+      "camera": 1,
+      "frame": 24,
+      "mask_iou": 0.9924191038582771,
+      "valid_fraction": 0.9911550677441402
+    },
+    {
+      "camera": 1,
+      "frame": 25,
+      "mask_iou": 0.9928677324998998,
+      "valid_fraction": 0.9897897413132087
+    },
+    {
+      "camera": 1,
+      "frame": 26,
+      "mask_iou": 0.9924968904225013,
+      "valid_fraction": 0.9917933376455369
+    },
+    {
+      "camera": 1,
+      "frame": 27,
+      "mask_iou": 0.9928574294771478,
+      "valid_fraction": 0.9903811178919291
+    },
+    {
+      "camera": 1,
+      "frame": 28,
+      "mask_iou": 0.9924032316411431,
+      "valid_fraction": 0.9948157148643175
+    },
+    {
+      "camera": 1,
+      "frame": 29,
+      "mask_iou": 0.992714538721623,
+      "valid_fraction": 0.984349024855046
+    },
+    {
+      "camera": 1,
+      "frame": 30,
+      "mask_iou": 0.9930382293762575,
+      "valid_fraction": 0.9916926692871905
+    },
+    {
+      "camera": 1,
+      "frame": 31,
+      "mask_iou": 0.992519305019305,
+      "valid_fraction": 0.9909230893913608
+    },
+    {
+      "camera": 1,
+      "frame": 32,
+      "mask_iou": 0.9922692865195684,
+      "valid_fraction": 0.9913975004057782
+    },
+    {
+      "camera": 1,
+      "frame": 33,
+      "mask_iou": 0.9927591616718291,
+      "valid_fraction": 0.9981765873819847
+    },
+    {
+      "camera": 1,
+      "frame": 34,
+      "mask_iou": 0.9924056736448749,
+      "valid_fraction": 0.9929548951332091
+    },
+    {
+      "camera": 1,
+      "frame": 35,
+      "mask_iou": 0.9928092234764794,
+      "valid_fraction": 0.993404548029457
+    },
+    {
+      "camera": 1,
+      "frame": 36,
+      "mask_iou": 0.9924175559656584,
+      "valid_fraction": 0.9921170715931601
+    },
+    {
+      "camera": 1,
+      "frame": 37,
+      "mask_iou": 0.9924294011616263,
+      "valid_fraction": 0.9947126251210849
+    },
+    {
+      "camera": 1,
+      "frame": 38,
+      "mask_iou": 0.9928348410855816,
+      "valid_fraction": 0.9947586985445309
+    },
+    {
+      "camera": 1,
+      "frame": 39,
+      "mask_iou": 0.9927672327672328,
+      "valid_fraction": 0.9916680083722428
+    },
+    {
+      "camera": 1,
+      "frame": 40,
+      "mask_iou": 0.9922564163972378,
+      "valid_fraction": 0.9931614304678386
+    },
+    {
+      "camera": 1,
+      "frame": 41,
+      "mask_iou": 0.9926646467867963,
+      "valid_fraction": 0.9918072289156626
+    },
+    {
+      "camera": 1,
+      "frame": 42,
+      "mask_iou": 0.9925917074919345,
+      "valid_fraction": 0.9894065246177922
+    },
+    {
+      "camera": 1,
+      "frame": 43,
+      "mask_iou": 0.9920454997414787,
+      "valid_fraction": 0.9909393416990739
+    },
+    {
+      "camera": 1,
+      "frame": 44,
+      "mask_iou": 0.9920887334022422,
+      "valid_fraction": 0.9910238429172511
+    },
+    {
+      "camera": 1,
+      "frame": 45,
+      "mask_iou": 0.9926470588235294,
+      "valid_fraction": 0.9957957957957958
+    },
+    {
+      "camera": 1,
+      "frame": 46,
+      "mask_iou": 0.992214807753416,
+      "valid_fraction": 0.999839871897518
+    },
+    {
+      "camera": 1,
+      "frame": 47,
+      "mask_iou": 0.9924146147736299,
+      "valid_fraction": 0.9961983272639962
+    },
+    {
+      "camera": 2,
+      "frame": 0,
+      "mask_iou": 0.9918732373459997,
+      "valid_fraction": 0.9837255415466347
+    },
+    {
+      "camera": 2,
+      "frame": 1,
+      "mask_iou": 0.9918915875220541,
+      "valid_fraction": 0.989478863111683
+    },
+    {
+      "camera": 2,
+      "frame": 2,
+      "mask_iou": 0.9912999572765759,
+      "valid_fraction": 0.9738275281118991
+    },
+    {
+      "camera": 2,
+      "frame": 3,
+      "mask_iou": 0.9914289263384539,
+      "valid_fraction": 0.9865519545606415
+    },
+    {
+      "camera": 2,
+      "frame": 4,
+      "mask_iou": 0.9923447241733091,
+      "valid_fraction": 0.9909734372514712
+    },
+    {
+      "camera": 2,
+      "frame": 5,
+      "mask_iou": 0.991701244813278,
+      "valid_fraction": 0.9898160574721718
+    },
+    {
+      "camera": 2,
+      "frame": 6,
+      "mask_iou": 0.9922891190902718,
+      "valid_fraction": 0.9887362637362638
+    },
+    {
+      "camera": 2,
+      "frame": 7,
+      "mask_iou": 0.9915032160724212,
+      "valid_fraction": 0.9804581130866571
+    },
+    {
+      "camera": 2,
+      "frame": 8,
+      "mask_iou": 0.9921530161844041,
+      "valid_fraction": 0.9821634536167408
+    },
+    {
+      "camera": 2,
+      "frame": 9,
+      "mask_iou": 0.9923370126260621,
+      "valid_fraction": 0.9923578602008563
+    },
+    {
+      "camera": 2,
+      "frame": 10,
+      "mask_iou": 0.9921021140805744,
+      "valid_fraction": 0.9871341267288517
+    },
+    {
+      "camera": 2,
+      "frame": 11,
+      "mask_iou": 0.9925937852197714,
+      "valid_fraction": 0.9842660178426602
+    },
+    {
+      "camera": 2,
+      "frame": 12,
+      "mask_iou": 0.991839066389195,
+      "valid_fraction": 0.9883572633397787
+    },
+    {
+      "camera": 2,
+      "frame": 13,
+      "mask_iou": 0.9919785023863955,
+      "valid_fraction": 0.9900537743096268
+    },
+    {
+      "camera": 2,
+      "frame": 14,
+      "mask_iou": 0.9926015279453156,
+      "valid_fraction": 0.9905209430446407
+    },
+    {
+      "camera": 2,
+      "frame": 15,
+      "mask_iou": 0.9930155120604239,
+      "valid_fraction": 0.9922712030751615
+    },
+    {
+      "camera": 2,
+      "frame": 16,
+      "mask_iou": 0.9919821826280624,
+      "valid_fraction": 0.9925705188390415
+    },
+    {
+      "camera": 2,
+      "frame": 17,
+      "mask_iou": 0.9922542842236224,
+      "valid_fraction": 0.9900906002265005
+    },
+    {
+      "camera": 2,
+      "frame": 18,
+      "mask_iou": 0.9920325137821415,
+      "valid_fraction": 0.988236725753458
+    },
+    {
+      "camera": 2,
+      "frame": 19,
+      "mask_iou": 0.9923278820916617,
+      "valid_fraction": 0.992146490335707
+    },
+    {
+      "camera": 2,
+      "frame": 20,
+      "mask_iou": 0.99215937274982,
+      "valid_fraction": 0.9949197645351181
+    },
+    {
+      "camera": 2,
+      "frame": 21,
+      "mask_iou": 0.9919390239035876,
+      "valid_fraction": 0.9894597095385606
+    },
+    {
+      "camera": 2,
+      "frame": 22,
+      "mask_iou": 0.9922769107643057,
+      "valid_fraction": 0.9957656168084849
+    },
+    {
+      "camera": 2,
+      "frame": 23,
+      "mask_iou": 0.9926728257406817,
+      "valid_fraction": 0.9918565468549422
+    },
+    {
+      "camera": 2,
+      "frame": 24,
+      "mask_iou": 0.9921163140797085,
+      "valid_fraction": 0.9903366210118596
+    },
+    {
+      "camera": 2,
+      "frame": 25,
+      "mask_iou": 0.9918380284480368,
+      "valid_fraction": 0.9900531298685735
+    },
+    {
+      "camera": 2,
+      "frame": 26,
+      "mask_iou": 0.9912221738958523,
+      "valid_fraction": 0.9963301288443895
+    },
+    {
+      "camera": 2,
+      "frame": 27,
+      "mask_iou": 0.9919259551004332,
+      "valid_fraction": 0.9886043279729998
+    },
+    {
+      "camera": 2,
+      "frame": 28,
+      "mask_iou": 0.9916115311909263,
+      "valid_fraction": 0.9898725128082926
+    },
+    {
+      "camera": 2,
+      "frame": 29,
+      "mask_iou": 0.9920378399684667,
+      "valid_fraction": 0.9967021614748888
+    },
+    {
+      "camera": 2,
+      "frame": 30,
+      "mask_iou": 0.991941823899371,
+      "valid_fraction": 0.9886665345749951
+    },
+    {
+      "camera": 2,
+      "frame": 31,
+      "mask_iou": 0.9919034705026923,
+      "valid_fraction": 0.9955224472005388
+    },
+    {
+      "camera": 2,
+      "frame": 32,
+      "mask_iou": 0.991580438289334,
+      "valid_fraction": 0.990001190334484
+    },
+    {
+      "camera": 2,
+      "frame": 33,
+      "mask_iou": 0.9915400960100732,
+      "valid_fraction": 0.9890471844120798
+    },
+    {
+      "camera": 2,
+      "frame": 34,
+      "mask_iou": 0.992085679410954,
+      "valid_fraction": 0.99237974281632
+    },
+    {
+      "camera": 2,
+      "frame": 35,
+      "mask_iou": 0.9916426853786415,
+      "valid_fraction": 0.987716159809183
+    },
+    {
+      "camera": 2,
+      "frame": 36,
+      "mask_iou": 0.9921797859315139,
+      "valid_fraction": 0.991839496835317
+    },
+    {
+      "camera": 2,
+      "frame": 37,
+      "mask_iou": 0.9916238640853418,
+      "valid_fraction": 0.9894413897521714
+    },
+    {
+      "camera": 2,
+      "frame": 38,
+      "mask_iou": 0.993026941362916,
+      "valid_fraction": 0.9874720714969678
+    },
+    {
+      "camera": 2,
+      "frame": 39,
+      "mask_iou": 0.9920257081647227,
+      "valid_fraction": 0.9917216556688663
+    },
+    {
+      "camera": 2,
+      "frame": 40,
+      "mask_iou": 0.9926520236723995,
+      "valid_fraction": 0.9896366837387964
+    },
+    {
+      "camera": 2,
+      "frame": 41,
+      "mask_iou": 0.9921632588113612,
+      "valid_fraction": 0.9889739785894711
+    },
+    {
+      "camera": 2,
+      "frame": 42,
+      "mask_iou": 0.9921124965143608,
+      "valid_fraction": 0.9918088737201365
+    },
+    {
+      "camera": 2,
+      "frame": 43,
+      "mask_iou": 0.9924998005266098,
+      "valid_fraction": 0.9911970415628266
+    },
+    {
+      "camera": 2,
+      "frame": 44,
+      "mask_iou": 0.9923764668316436,
+      "valid_fraction": 0.9942484816796042
+    },
+    {
+      "camera": 2,
+      "frame": 45,
+      "mask_iou": 0.9926499960054326,
+      "valid_fraction": 0.9977062374245473
+    },
+    {
+      "camera": 2,
+      "frame": 46,
+      "mask_iou": 0.9926861436393429,
+      "valid_fraction": 0.9988324341734439
+    },
+    {
+      "camera": 2,
+      "frame": 47,
+      "mask_iou": 0.9924460431654676,
+      "valid_fraction": 0.9976642100600056
+    }
+  ]
+}

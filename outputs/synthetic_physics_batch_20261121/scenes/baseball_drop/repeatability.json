@@ -1,0 +1,6 @@
+{
+  "same_shape_and_times": true,
+  "max_position_difference_m": 8.940696716308594e-07,
+  "threshold_m": 1e-05,
+  "pass_gate": true
+}

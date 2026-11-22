@@ -1,0 +1,44 @@
+{
+  "asset": "football",
+  "license": "CC0",
+  "source": "https://polyhaven.com/a/football",
+  "files": {
+    "football_2k.blend": {
+      "include": {
+        "textures/football_nor_gl_2k.exr": {
+          "size": 8411041,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/football/football_nor_gl_2k.exr",
+          "md5": "c0bd0225c52b10c9944e4c49ed153498"
+        },
+        "textures/football_rough_2k.exr": {
+          "size": 4056671,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/football/football_rough_2k.exr",
+          "md5": "1e3bcef8eee5c301044ac9ff184126b9"
+        },
+        "textures/football_diff_2k.jpg": {
+          "size": 2813255,
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/football/football_diff_2k.jpg",
+          "md5": "61e3d2bcda45060ee26be74999c171bf"
+        }
+      },
+      "size": 217089,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/football/football_2k.blend",
+      "md5": "3b4b531bbecc91e7ec1a80c9963fcacc"
+    },
+    "textures/football_nor_gl_2k.exr": {
+      "size": 8411041,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/football/football_nor_gl_2k.exr",
+      "md5": "c0bd0225c52b10c9944e4c49ed153498"
+    },
+    "textures/football_rough_2k.exr": {
+      "size": 4056671,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/football/football_rough_2k.exr",
+      "md5": "1e3bcef8eee5c301044ac9ff184126b9"
+    },
+    "textures/football_diff_2k.jpg": {
+      "size": 2813255,
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/football/football_diff_2k.jpg",
+      "md5": "61e3d2bcda45060ee26be74999c171bf"
+    }
+  }
+}

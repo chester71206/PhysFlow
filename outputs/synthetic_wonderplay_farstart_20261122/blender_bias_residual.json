@@ -1,0 +1,36 @@
+{
+  "baseball": {
+    "all": {
+      "pixels": 21433,
+      "mean_epe_px": 0.3663558686146525,
+      "mean_sq_epe_px2": 1.9711080863766461
+    },
+    "interior": {
+      "pixels": 15267,
+      "mean_epe_px": 0.12173696285878745,
+      "mean_sq_epe_px2": 0.025822690203562457
+    },
+    "boundary": {
+      "pixels": 6166,
+      "mean_epe_px": 0.9720316445106615,
+      "mean_sq_epe_px2": 6.787629679528522
+    }
+  },
+  "football": {
+    "all": {
+      "pixels": 20009,
+      "mean_epe_px": 0.6580787175398124,
+      "mean_sq_epe_px2": 1.4228519663805226
+    },
+    "interior": {
+      "pixels": 12931,
+      "mean_epe_px": 0.4244029213984146,
+      "mean_sq_epe_px2": 0.3647867421935664
+    },
+    "boundary": {
+      "pixels": 7078,
+      "mean_epe_px": 1.0849876918128294,
+      "mean_sq_epe_px2": 3.35586149081702
+    }
+  }
+}

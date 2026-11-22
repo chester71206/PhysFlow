@@ -1,0 +1,55 @@
+{
+  "scene": "outputs/synthetic_physics_batch_20261121/scenes/baseball_drop",
+  "frames": [
+    0,
+    2,
+    4
+  ],
+  "steps": [
+    167,
+    333
+  ],
+  "dt_s": 0.0005,
+  "views": [
+    0,
+    1,
+    2
+  ],
+  "resolution": 96,
+  "gt_E_Pa": 15000.0,
+  "gt_nu": 0.32,
+  "native_vs_repaired_max_position_error_m": 2.384185791015625e-07,
+  "max_camera_projection_error_px": 2.1843673422949905e-05,
+  "gaussian_sigma_m": 0.003605215111747384,
+  "target": [
+    {
+      "view": 0,
+      "mean_flow_px": 2.17376708984375,
+      "max_flow_px": 15.735249519348145,
+      "foreground_pixels": [
+        1074,
+        1041
+      ]
+    },
+    {
+      "view": 1,
+      "mean_flow_px": 2.135138750076294,
+      "max_flow_px": 15.396515846252441,
+      "foreground_pixels": [
+        1100,
+        1047
+      ]
+    },
+    {
+      "view": 2,
+      "mean_flow_px": 2.0101354122161865,
+      "max_flow_px": 15.086224555969238,
+      "foreground_pixels": [
+        1076,
+        1032
+      ]
+    }
+  ],
+  "gt_loss": 5.0716344318635365e-11,
+  "target_definition": "same WonderPlay Gaussian rasterizer; source native GT MPM particle positions; source covariances from GT repaired rollout; fixed Blender object mask"
+}

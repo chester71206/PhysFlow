@@ -1,0 +1,66 @@
+{
+  "scene": "outputs/synthetic_physics_batch_20261121/scenes/baseball_drop",
+  "frames": [
+    0,
+    2,
+    4,
+    6,
+    8
+  ],
+  "steps": [
+    167,
+    333,
+    500,
+    667
+  ],
+  "dt_s": 0.0005,
+  "views": [
+    0,
+    1,
+    2
+  ],
+  "resolution": 128,
+  "gt_E_Pa": 15000.0,
+  "gt_nu": 0.32,
+  "native_vs_repaired_max_position_error_m": 3.5762786865234375e-07,
+  "max_camera_projection_error_px": 4.8870029090153366e-05,
+  "gaussian_sigma_m": 0.003605215111747384,
+  "target": [
+    {
+      "view": 0,
+      "mean_flow_px": 2.1634483337402344,
+      "max_flow_px": 23.782367706298828,
+      "foreground_pixels": [
+        1837,
+        1764,
+        1757,
+        1773
+      ]
+    },
+    {
+      "view": 1,
+      "mean_flow_px": 2.0760016441345215,
+      "max_flow_px": 22.779226303100586,
+      "foreground_pixels": [
+        1902,
+        1772,
+        1742,
+        1795
+      ]
+    },
+    {
+      "view": 2,
+      "mean_flow_px": 2.003262996673584,
+      "max_flow_px": 21.65742301940918,
+      "foreground_pixels": [
+        1858,
+        1751,
+        1732,
+        1750
+      ]
+    }
+  ],
+  "gt_loss": 0.4959401786327362,
+  "target_kind": "blender-mesh",
+  "target_definition": "composed Blender visible-mesh geometric flow with source/destination visibility; fixed Blender object mask; independent of WonderPlay rasterizer"
+}

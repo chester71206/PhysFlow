@@ -1,0 +1,16 @@
+{
+  "start_name": "gt_start",
+  "target_kind": "blender-mesh",
+  "updates": 40,
+  "initial_loss": 0.4959401786327362,
+  "final_loss": 0.4820571541786194,
+  "initial_E_Pa": 15000.0,
+  "initial_nu": 0.32,
+  "final_E_Pa": 15179.809415712953,
+  "final_nu": 0.33141466975212097,
+  "final_E_relative_error": 0.011987294380863434,
+  "final_nu_absolute_error": 0.011414669752120965,
+  "any_boundary_hit_E": false,
+  "any_boundary_hit_nu": false,
+  "final_particle_epe_m": 0.0001992074103327468
+}

@@ -1,0 +1,8 @@
+{
+  "target_kind": "blender-mesh",
+  "loss": 0.4959401786327362,
+  "gradient_E_internal": -387.2549743652344,
+  "gradient_nu": -1.9259166717529297,
+  "normalized_gradient_logE": -0.5808824615478516,
+  "normalized_gradient_nu_0p05": -0.09629583358764648
+}

@@ -1,0 +1,16 @@
+{
+  "start_name": "lowE_highNu",
+  "target_kind": "gaussian-exact",
+  "updates": 240,
+  "initial_loss": 10.403779029846191,
+  "final_loss": 0.000707799568772316,
+  "initial_E_Pa": 6000.0,
+  "initial_nu": 0.44,
+  "final_E_Pa": 11941.588018089533,
+  "final_nu": 0.33092042803764343,
+  "final_E_relative_error": 0.004867665159205559,
+  "final_nu_absolute_error": 0.010920428037643426,
+  "any_boundary_hit_E": false,
+  "any_boundary_hit_nu": true,
+  "final_particle_epe_m": 0.0002173394022975117
+}

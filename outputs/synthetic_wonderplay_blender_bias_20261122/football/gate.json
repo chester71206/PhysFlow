@@ -1,0 +1,66 @@
+{
+  "scene": "outputs/synthetic_physics_batch_20261121/scenes/football_deflated_2s",
+  "frames": [
+    0,
+    2,
+    4,
+    6,
+    8
+  ],
+  "steps": [
+    167,
+    333,
+    500,
+    667
+  ],
+  "dt_s": 0.0005,
+  "views": [
+    0,
+    1,
+    2
+  ],
+  "resolution": 128,
+  "gt_E_Pa": 12000.0,
+  "gt_nu": 0.32,
+  "native_vs_repaired_max_position_error_m": 3.5762786865234375e-07,
+  "max_camera_projection_error_px": 1.6809693747177334e-05,
+  "gaussian_sigma_m": 0.009522596374154091,
+  "target": [
+    {
+      "view": 0,
+      "mean_flow_px": 1.1645995378494263,
+      "max_flow_px": 23.044294357299805,
+      "foreground_pixels": [
+        1650,
+        1487,
+        1317,
+        1408
+      ]
+    },
+    {
+      "view": 1,
+      "mean_flow_px": 1.351096510887146,
+      "max_flow_px": 21.698291778564453,
+      "foreground_pixels": [
+        2105,
+        1936,
+        1720,
+        1708
+      ]
+    },
+    {
+      "view": 2,
+      "mean_flow_px": 1.2306450605392456,
+      "max_flow_px": 22.65549087524414,
+      "foreground_pixels": [
+        1828,
+        1679,
+        1533,
+        1638
+      ]
+    }
+  ],
+  "gt_loss": 0.3658297061920166,
+  "target_kind": "blender-mesh",
+  "target_definition": "composed Blender visible-mesh geometric flow with source/destination visibility; fixed Blender object mask; independent of WonderPlay rasterizer"
+}

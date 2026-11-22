@@ -1,0 +1,55 @@
+{
+  "scene": "outputs/synthetic_physics_batch_20261121/scenes/football_deflated_2s",
+  "frames": [
+    0,
+    2,
+    4
+  ],
+  "steps": [
+    167,
+    333
+  ],
+  "dt_s": 0.0005,
+  "views": [
+    0,
+    1,
+    2
+  ],
+  "resolution": 96,
+  "gt_E_Pa": 12000.0,
+  "gt_nu": 0.32,
+  "native_vs_repaired_max_position_error_m": 1.7881393432617188e-07,
+  "max_camera_projection_error_px": 1.2195142275572834e-05,
+  "gaussian_sigma_m": 0.009522596374154091,
+  "target": [
+    {
+      "view": 0,
+      "mean_flow_px": 1.641257882118225,
+      "max_flow_px": 17.260623931884766,
+      "foreground_pixels": [
+        972,
+        949
+      ]
+    },
+    {
+      "view": 1,
+      "mean_flow_px": 1.8016095161437988,
+      "max_flow_px": 16.22810935974121,
+      "foreground_pixels": [
+        1244,
+        1166
+      ]
+    },
+    {
+      "view": 2,
+      "mean_flow_px": 1.769893765449524,
+      "max_flow_px": 16.96525764465332,
+      "foreground_pixels": [
+        1097,
+        1044
+      ]
+    }
+  ],
+  "gt_loss": 2.4984586882020876e-12,
+  "target_definition": "same WonderPlay Gaussian rasterizer; source native GT MPM particle positions; source covariances from GT repaired rollout; fixed Blender object mask"
+}

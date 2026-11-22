@@ -1,0 +1,23 @@
+[
+  {
+    "name": "rubber_duck_toy",
+    "vertices": 2146,
+    "faces": 2144,
+    "nonmanifold_edges": 0,
+    "dimensions": [
+      0.213504821062088,
+      0.30000218749046326,
+      0.2855228781700134
+    ],
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "uv_layers": 1,
+    "material_names": [
+      "rubber_duck_toy"
+    ],
+    "visible": true
+  }
+]
