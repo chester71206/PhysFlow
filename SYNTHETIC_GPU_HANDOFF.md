@@ -40,6 +40,6 @@ The full queue tests both baseball and deflated football at `E/GT = 10, 0.1, 100
 - `outputs/synthetic_physics_batch_20261121/README.md` and `quality_report.md` document the physics/render QA. PASS means automated checks passed, not human certification of naturalness.
 - `outputs/synthetic_wonderplay_multistart_20261122/REPORT.md` records earlier 0.7–1.35× starts; `outputs/synthetic_wonderplay_farstart_20261122/REPORT.md` records 0.5×/2× starts and the football continuation to 270 updates. These do **not** answer the 10×/100× question.
 - `outputs/synthetic_wonderplay_blender_bias_20261122/REPORT.md` shows that independent Blender visible-mesh flow has nonzero loss and gradient at GT. Gaussian self-consistency recovery does not prove recovery from Blender video.
-- `outputs/synthetic_wonderplay_order_magnitudes_20261122/` is the destination for the new 10×/100× results. The report on this branch is a pending-status placeholder until experiments run.
+- `outputs/synthetic_wonderplay_order_magnitudes_20261122/` is the destination for the new 10×/100× results. Its `REPORT.md` is generated after the experiments run.
 
 After running, review `runner_state.json`, `runner_summary.csv`, `REPORT.md`, the per-start `start_probe_*.json` and `gradient_gate_*.json`, and each start's `history.csv` and `final.json`. The full local 2026-11-22 queue was waiting for idle GPU 8/9 at handoff; do not interpret the absence of results as optimizer failure.
